@@ -1,0 +1,33 @@
+footer {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    border-radius: 48px;
+    box-sizing: border-box;
+    padding: 6px 16px;
+    font-size: 0.8em;
+    line-height: 1.4;
+    background-color: #f0f0f0;
+    z-index: 10;
+}
+
+footer.over {
+    color: #c62828;
+}
+
+body {
+    padding-bottom: 40px;
+}
+
+@media (prefers-color-scheme: dark) {
+    footer {
+        border-color: #444;
+        background-color: #3f3f3f;
+    }
+
+    footer.over {
+        color: #ff8a80;
+    }
+}

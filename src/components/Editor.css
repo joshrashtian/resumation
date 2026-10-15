@@ -1,0 +1,119 @@
+.editor {
+  width: fit-content;
+  max-width: 100%;
+  margin: 2rem auto;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  background-color: #ffffff;
+  text-align: left;
+}
+
+.editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px;
+  border-bottom: 1px solid #d0d0d0;
+}
+
+
+
+.editor-toolbar button {
+  padding: 0.3em 0.7em;
+  font-size: 0.875em;
+  box-shadow: none;
+  border: 1px solid #d0d0d0;
+}
+
+.editor-toolbar select {
+  padding: 0.3em 0.5em;
+  font-size: 0.875em;
+  font-family: inherit;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  background-color: inherit;
+  color: inherit;
+}
+
+.editor-toolbar button.active {
+  background-color: #396cd8;
+  border-color: #396cd8;
+  color: #ffffff;
+}
+
+.editor-toolbar button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* The editor is the width of the page's text area (page width minus margins)
+   so lines wrap like the printed page, and a line marks where each page of
+   text ends. Sizes come from the document via CSS variables. */
+.editor-content .tiptap {
+  position: relative;
+  box-sizing: content-box;
+  width: var(--page-text-width);
+  min-height: 300px;
+  margin: 0 auto;
+  padding: 24px;
+  outline: none;
+  font-family: var(--doc-font-family, inherit);
+  font-size: var(--doc-font-size, 11pt);
+  line-height: normal; /* matches Word's single spacing */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--page-text-height) - 1px),
+    var(--page-break) calc(var(--page-text-height) - 1px),
+    var(--page-break) var(--page-text-height)
+  );
+  background-origin: content-box;
+  background-clip: content-box;
+}
+
+/* With a page limit, show the full allowed area. */
+.editor.limited .editor-content .tiptap {
+  min-height: calc(var(--pages) * var(--page-text-height));
+}
+
+/* Imported paragraphs set their own spacing; these are defaults for new text. */
+.editor-content .tiptap p,
+.editor-content .tiptap h1,
+.editor-content .tiptap h2,
+.editor-content .tiptap h3 {
+  margin: 0 0 6pt;
+}
+
+.editor-content .tiptap ul,
+.editor-content .tiptap ol {
+  margin: 0;
+  padding-left: 0.5in;
+}
+
+.editor-content .tiptap hr {
+  border: none;
+  border-top: 1px solid #a0a0a0;
+  margin: 2pt 0;
+}
+
+/* Text after a right-aligned tab stop, e.g. dates on resume entries. */
+.editor-content .tiptap .right-tab {
+  float: right;
+}
+
+.editor {
+  --page-break: rgba(57, 108, 216, 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  .editor {
+    background-color: #1f1f1f;
+    border-color: #444;
+  }
+
+  .editor-toolbar,
+  .editor-toolbar button,
+  .editor-toolbar select {
+    border-color: #444;
+  }
+}
