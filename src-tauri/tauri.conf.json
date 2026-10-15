@@ -10,11 +10,14 @@
     "frontendDist": "../dist"
   },
   "app": {
+    "macOSPrivateApi": true,
     "windows": [
       {
         "title": "resumation",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "transparent": true
+
       }
     ],
     "security": {
