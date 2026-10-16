@@ -1,14 +1,112 @@
-header {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    height: 64px;
-    width:100%;
+.titlebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--titlebar-height);
     box-sizing: border-box;
-    padding-left: 10%;
-    padding-right: 10%;
+    padding: 0 12px;
     display: flex;
     align-items: center;
-    justify-content: start;
+    justify-content: space-between;
     background-color: transparent;
+    /* Content scrolls underneath the bar. */
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    user-select: none;
+    -webkit-user-select: none;
+    z-index: 20;
+}
+
+/* Clear the macOS traffic lights (trafficLightPosition in tauri.conf.json). */
+:root[data-platform="mac"] .titlebar {
+    padding-left: 80px;
+}
+
+.titlebar-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 100%;
+}
+
+.titlebar-button {
+    height: 30px;
+    width: 30px;
+    padding: 0;
+    border-radius: 100%;
+}
+
+/* Centred on the window, not between the button groups. */
+.titlebar-title {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    height: 100%;
+    max-width: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+/* Clicks fall through to the title itself so it stays a drag handle. */
+.titlebar-title * {
+    pointer-events: none;
+}
+
+.titlebar-app {
+    font-weight: 700;
+}
+
+.titlebar-sep {
+    opacity: 0.35;
+}
+
+.titlebar-file {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+}
+
+.titlebar-file.untitled {
+    opacity: 0.5;
+}
+
+.window-controls {
+    display: flex;
+    gap: 2px;
+    margin-left: 4px;
+}
+
+.window-controls button {
+    height: 30px;
+    width: 38px;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    box-shadow: none;
+    color: inherit;
+}
+
+.window-controls button:hover {
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+.window-controls button.close:hover {
+    background-color: #e81123;
+    color: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+    .window-controls button {
+        background: transparent;
+    }
+
+    .window-controls button:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
 }

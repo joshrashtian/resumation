@@ -6,8 +6,6 @@ import { docxToHtml } from "./converter";
 import { useSettings } from "./settings";
 import { PageLayout } from "./pageLayout";
 import "./App.css";
-import { FaGear, FaUpload } from "react-icons/fa6";
-import { LuPanelLeft, LuPanelRight } from "react-icons/lu";
 import EditorFooter from "./components/EditorFooter";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
@@ -37,7 +35,10 @@ function useStoredToggle(key: string, initial: boolean): [boolean, () => void] {
 
 function App() {
   const fileInput = useRef<HTMLInputElement>(null);
-  const [doc, setDoc] = useState<{ key: number; html: string; layout?: PageLayout }>({ key: 0, html: "" });
+  const [doc, setDoc] = useState<{ key: number; html: string; layout?: PageLayout; name?: string }>({
+    key: 0,
+    html: "",
+  });
   const [settings] = useSettings();
   const [pageStatus, setPageStatus] = useState<PageStatus>({ usage: 0, limitHit: false });
   const [leftOpen, toggleLeft] = useStoredToggle("resumation.sidebar.left", true);
@@ -76,7 +77,7 @@ function App() {
     if (!file) return;
     try {
       const { html, layout } = await docxToHtml(file);
-      setDoc((prev) => ({ key: prev.key + 1, html, layout }));
+      setDoc((prev) => ({ key: prev.key + 1, html, layout, name: file.name }));
     } catch (err) {
       console.error(err);
       alert(`Couldn't open ${file.name}. Make sure it's a Word .docx file.`);
@@ -90,10 +91,10 @@ function App() {
       if (ext === "docx") {
         const bytes = await invoke<ArrayBuffer>("read_document_bytes", { name: path });
         const { html, layout } = await docxToHtml(new File([bytes], name));
-        setDoc((prev) => ({ key: prev.key + 1, html, layout }));
+        setDoc((prev) => ({ key: prev.key + 1, html, layout, name }));
       } else if (ext === "html" || ext === "htm" || ext === "txt") {
         const html = await invoke<string>("read_document", { name: path });
-        setDoc((prev) => ({ key: prev.key + 1, html }));
+        setDoc((prev) => ({ key: prev.key + 1, html, name }));
       } else {
         alert(`Resumation can't open ${name}. It opens Word (.docx) and HTML files.`);
       }
@@ -116,27 +117,15 @@ function App() {
         } as React.CSSProperties
       }
     >
-      <Header />
-
-      <button
-        title={`${leftOpen ? "Hide" : "Show"} documents (⌘[)`}
-        className="sidebar-toggle left"
-        aria-pressed={leftOpen}
-        onClick={toggleLeft}
-      >
-        <LuPanelLeft />
-      </button>
-      <button
-        title={`${rightOpen ? "Hide" : "Show"} details (⌘])`}
-        className="sidebar-toggle right"
-        aria-pressed={rightOpen}
-        onClick={toggleRight}
-      >
-        <LuPanelRight />
-      </button>
-      <button title="Settings" className="settings_button" onClick={() => invoke("open_settings_page")}>
-        <FaGear />
-      </button>
+      <Header
+        fileName={doc.name}
+        leftOpen={leftOpen}
+        rightOpen={rightOpen}
+        onToggleLeft={toggleLeft}
+        onToggleRight={toggleRight}
+        onUpload={() => fileInput.current?.click()}
+        onSettings={() => invoke("open_settings_page")}
+      />
 
       <Sidebar side="left" open={leftOpen} title="Documents">
         {leftOpen && <FileTree refreshKey={filesVersion} onOpenFile={openDocument} />}
@@ -163,9 +152,6 @@ function App() {
           onChange={handleUpload}
           hidden
         />
-        <button title="Open Word document" className="upload_button" onClick={() => fileInput.current?.click()}>
-          <FaUpload />
-        </button>
         <Editor
           key={doc.key}
           content={doc.html}

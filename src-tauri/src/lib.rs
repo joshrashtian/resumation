@@ -16,6 +16,13 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
+            // macOS keeps its traffic lights over the content (titleBarStyle
+            // "Overlay" in tauri.conf.json); Windows goes fully frameless.
+            #[cfg(target_os = "windows")]
+            app.get_webview_window("main")
+                .expect("main window not found")
+                .set_decorations(false)?;
+
             #[cfg(target_os = "macos")]
             {
                 let window = app
