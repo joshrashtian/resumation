@@ -5,7 +5,7 @@
   line-height: 24px;
   font-weight: 400;
 
-  color: rgb(0,0,0,0.3);
+  color: rgba(0, 0, 0, 0.85);
   background-color: transparent;
 
   font-synthesis: none;
@@ -94,4 +94,72 @@ button {
    right: 12px;
    height: 32px;
    width: 32px;
+}
+
+.upload_button {
+  position: fixed;
+  top: 12px;
+  left: 52px;
+  height: 32px;
+  width: 32px;
+  padding: 0;
+  border-radius: 100%;
+  z-index: 20;
+}
+
+/* Leave room for whichever sidebars are open. */
+.main {
+  margin-left: var(--left-space);
+  margin-right: var(--right-space);
+  padding-top: 48px;
+  transition: margin 0.2s ease;
+}
+
+.app footer {
+  left: calc(var(--left-space) + (100% - var(--left-space) - var(--right-space)) / 2);
+  width: calc((100% - var(--left-space) - var(--right-space)) * 0.7);
+  transition: left 0.2s ease, width 0.2s ease;
+}
+
+/* Transparency off: paint a solid window background behind everything and
+   make the glassy panels opaque. Rounded to match the window's corners. */
+:root[data-transparency="off"] {
+  --solid-bg: #ececec;
+  --solid-panel: #f7f7f7;
+  --solid-surface: #ffffff;
+}
+
+:root[data-transparency="off"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  border-radius: 26px;
+  background-color: var(--solid-bg);
+  z-index: -1;
+}
+
+:root[data-transparency="off"] .sidebar,
+:root[data-transparency="off"] footer {
+  background-color: var(--solid-panel);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:root[data-transparency="off"] .editor {
+  background-color: var(--solid-surface);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-transparency="off"] {
+    --solid-bg: #1c1c1e;
+    --solid-panel: #2a2a2c;
+    --solid-surface: #242426;
+  }
+
+  :root[data-transparency="off"] input,
+  :root[data-transparency="off"] button:not(.sidebar-body button) {
+    background-color: #0f0f0f;
+  }
 }

@@ -8,9 +8,11 @@ import { emit, listen } from "@tauri-apps/api/event";
 export type Settings = {
   // Maximum resume length in pages; 0 means no limit.
   pageLimit: 0 | 1 | 2;
+  // When false, the window gets a solid background instead of see-through glass.
+  transparency: boolean;
 };
 
-const DEFAULTS: Settings = { pageLimit: 0 };
+const DEFAULTS: Settings = { pageLimit: 0, transparency: true };
 const STORAGE_KEY = "resumation.settings";
 const CHANGED_EVENT = "settings-changed";
 

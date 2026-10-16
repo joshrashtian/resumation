@@ -1,3 +1,4 @@
+mod directory;
 mod settings;
 
 use tauri::Manager;
@@ -34,7 +35,11 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             greet,
-            settings::open_settings_page
+            settings::open_settings_page,
+            directory::read_document,
+            directory::read_document_bytes,
+            directory::save_document,
+            directory::list_documents,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -4,7 +4,9 @@
   margin: 2rem auto;
   border: 1px solid #d0d0d0;
   border-radius: 8px;
-  background-color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   text-align: left;
 }
 
@@ -107,13 +109,13 @@
 
 @media (prefers-color-scheme: dark) {
   .editor {
-    background-color: #1f1f1f;
-    border-color: #444;
+    background-color: rgba(31, 31, 31, 0.45);
+    border-color: rgba(255, 255, 255, 0.12);
   }
 
   .editor-toolbar,
   .editor-toolbar button,
   .editor-toolbar select {
-    border-color: #444;
+    border-color: rgba(255, 255, 255, 0.12);
   }
 }
