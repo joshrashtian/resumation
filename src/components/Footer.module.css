@@ -1,4 +1,4 @@
-footer {
+.footer {
     position: fixed;
     bottom: 20px;
     left: 50%;
@@ -15,21 +15,23 @@ footer {
     z-index: 10;
 }
 
-footer.over {
+.footer.over {
     color: #c62828;
 }
 
-body {
-    padding-bottom: 40px;
+:global(:root[data-transparency="off"]) .footer {
+    background-color: var(--solid-panel);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
 }
 
 @media (prefers-color-scheme: dark) {
-    footer {
+    .footer {
         border-color: #444;
         background-color: rgba(63, 63, 63, 0.5);
     }
 
-    footer.over {
+    .footer.over {
         color: #ff8a80;
     }
 }

@@ -8,7 +8,7 @@ import { RightTab } from "./extensions/RightTab";
 import { PageLimit, contentHeight } from "./extensions/PageLimit";
 import { FONTS } from "../fontOptions";
 import { DEFAULT_LAYOUT, PageLayout } from "../pageLayout";
-import "./Editor.css";
+import styles from "./Editor.module.css";
 import { Fa1, FaArrowRotateLeft, FaAlignCenter, FaAlignJustify, FaAlignLeft, FaAlignRight, FaArrowRotateRight, FaBold, FaHeading, FaItalic, FaUnderline } from "react-icons/fa6";
 
 // Resume sizes are usually given in points (body text 10–12pt).
@@ -122,7 +122,7 @@ function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT
 
   return (
     <div
-      className={pageLimit ? "editor limited" : "editor"}
+      className={pageLimit ? `${styles.editor} ${styles.limited}` : styles.editor}
       style={
         {
           "--pages": pageLimit,
@@ -133,7 +133,7 @@ function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT
         } as React.CSSProperties
       }
     >
-      <div className="editor-toolbar">
+      <div className={styles.toolbar}>
         <select
           value={state.fontFamily}
           onChange={(e) => {
@@ -192,31 +192,31 @@ function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT
           <button
             key={alignment.value}
             title={alignment.title}
-            className={state.align === alignment.value ? "active" : ""}
+            className={state.align === alignment.value ? styles.active : ""}
             onClick={() => editor.chain().focus().setTextAlign(alignment.value).run()}
           >
             {alignment.icon}
           </button>
         ))}
-        <button className={state.bold ? "active" : ""} onClick={() => editor.chain().focus().toggleBold().run()}>
+        <button className={state.bold ? styles.active : ""} onClick={() => editor.chain().focus().toggleBold().run()}>
           <FaBold />
         </button>
-        <button className={state.italic ? "active" : ""} onClick={() => editor.chain().focus().toggleItalic().run()}>
+        <button className={state.italic ? styles.active : ""} onClick={() => editor.chain().focus().toggleItalic().run()}>
           <FaItalic />
         </button>
-        <button className={state.underline ? "active" : ""} onClick={() => editor.chain().focus().toggleUnderline().run()}>
+        <button className={state.underline ? styles.active : ""} onClick={() => editor.chain().focus().toggleUnderline().run()}>
           <FaUnderline/>
         </button>
-        <button className={state.h1 ? "active" : ""} onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>
+        <button className={state.h1 ? styles.active : ""} onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>
           h1
         </button>
-        <button className={state.h2 ? "active" : ""} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
+        <button className={state.h2 ? styles.active : ""} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
           H2
         </button>
-        <button className={state.bulletList ? "active" : ""} onClick={() => editor.chain().focus().toggleBulletList().run()}>
+        <button className={state.bulletList ? styles.active : ""} onClick={() => editor.chain().focus().toggleBulletList().run()}>
           • List
         </button>
-        <button className={state.orderedList ? "active" : ""} onClick={() => editor.chain().focus().toggleOrderedList().run()}>
+        <button className={state.orderedList ? styles.active : ""} onClick={() => editor.chain().focus().toggleOrderedList().run()}>
           1. List
         </button>
         <button disabled={!state.canUndo} onClick={() => editor.chain().focus().undo().run()}>
@@ -226,7 +226,7 @@ function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT
           <FaArrowRotateRight />
         </button>
       </div>
-      <EditorContent editor={editor} className="editor-content" />
+      <EditorContent editor={editor} className={styles.content} />
     </div>
   );
 }

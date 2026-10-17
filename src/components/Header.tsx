@@ -1,7 +1,7 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { FaGear, FaPencil, FaUpload } from "react-icons/fa6";
 import { LuMinus, LuPanelLeft, LuPanelRight, LuSquare, LuX } from "react-icons/lu";
-import "./header.css";
+import styles from "./Header.module.css";
 
 type HeaderProps = {
   fileName?: string;
@@ -21,49 +21,49 @@ const Header = ({ fileName, leftOpen, rightOpen, onToggleLeft, onToggleRight, on
   const win = getCurrentWindow();
 
   return (
-    <header className="titlebar" data-tauri-drag-region>
-      <div className="titlebar-group" data-tauri-drag-region>
+    <header className={styles.titlebar} data-tauri-drag-region>
+      <div className={styles.group} data-tauri-drag-region>
         <button
           title={`${leftOpen ? "Hide" : "Show"} documents (⌘[)`}
-          className="titlebar-button"
+          className={styles.button}
           aria-pressed={leftOpen}
           onClick={onToggleLeft}
         >
           <LuPanelLeft />
         </button>
-        <button title="Open Word document" className="titlebar-button" onClick={onUpload}>
+        <button title="Open Word document" className={styles.button} onClick={onUpload}>
           <FaUpload />
         </button>
       </div>
 
-      <div className="titlebar-title" data-tauri-drag-region>
+      <div className={styles.title} data-tauri-drag-region>
         <FaPencil />
-        <span className="titlebar-app">Resumation</span>
-        <span className="titlebar-sep">/</span>
-        <span className={`titlebar-file${fileName ? "" : " untitled"}`}>{fileName ?? "Untitled"}</span>
+        <span className={styles.app}>Resumation</span>
+        <span className={styles.sep}>/</span>
+        <span className={fileName ? styles.file : `${styles.file} ${styles.untitled}`}>{fileName ?? "Untitled"}</span>
       </div>
 
-      <div className="titlebar-group" data-tauri-drag-region>
+      <div className={styles.group} data-tauri-drag-region>
         <button
           title={`${rightOpen ? "Hide" : "Show"} details (⌘])`}
-          className="titlebar-button"
+          className={styles.button}
           aria-pressed={rightOpen}
           onClick={onToggleRight}
         >
           <LuPanelRight />
         </button>
-        <button title="Settings" className="titlebar-button" onClick={onSettings}>
+        <button title="Settings" className={styles.button} onClick={onSettings}>
           <FaGear />
         </button>
         {isWindows && (
-          <div className="window-controls">
+          <div className={styles.windowControls}>
             <button title="Minimize" onClick={() => win.minimize()}>
               <LuMinus />
             </button>
             <button title="Maximize" onClick={() => win.toggleMaximize()}>
               <LuSquare />
             </button>
-            <button title="Close" className="close" onClick={() => win.close()}>
+            <button title="Close" className={styles.close} onClick={() => win.close()}>
               <LuX />
             </button>
           </div>

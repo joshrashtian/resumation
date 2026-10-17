@@ -13,14 +13,14 @@
     "macOSPrivateApi": true,
     "windows": [
       {
-        "title": "resumation",
+        "title": "Resumation",
         "width": 800,
         "height": 600,
         "transparent": true,
         "resizable": true,
         "titleBarStyle": "Overlay",
         "hiddenTitle": true,
-        "trafficLightPosition": { "x": 18, "y": 20 }
+        "trafficLightPosition": { "x": 18, "y": 26 }
       }
     ],
     "security": {

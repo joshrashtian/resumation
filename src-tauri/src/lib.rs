@@ -30,7 +30,7 @@ pub fn run() {
                     .expect("main window not found");
 
                 let options = LiquidGlassOptions::new(NSGlassEffectViewStyle::Clear)
-                    .radius(26.0)
+                    .radius(50.0)
                     .opaque(false)
                     // macOS 27+ only, ignored on macOS 26
                     .interactive(true);

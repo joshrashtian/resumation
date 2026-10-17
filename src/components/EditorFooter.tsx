@@ -1,5 +1,5 @@
 import type { PageStatus } from "./Editor";
-import "./Footer.css";
+import styles from "./Footer.module.css";
 
 type EditorFooterProps = {
   pageLimit: number;
@@ -17,7 +17,7 @@ const EditorFooter = ({ pageLimit, status }: EditorFooterProps) => {
     else message = `${Math.round(status.usage * 100)}% of ${pages} used`;
   }
 
-  return <footer className={pageLimit > 0 && over ? "over editor-footer" : "editor-footer"}>{message}</footer>;
+  return <footer className={pageLimit > 0 && over ? `${styles.footer} ${styles.over}` : styles.footer}>{message}</footer>;
 };
 
 export default EditorFooter;

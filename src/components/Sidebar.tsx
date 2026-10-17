@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import "./Sidebar.css";
+import styles from "./Sidebar.module.css";
 
 type SidebarProps = {
   side: "left" | "right";
@@ -10,9 +10,9 @@ type SidebarProps = {
 
 const Sidebar = ({ side, open, title, children }: SidebarProps) => {
   return (
-    <aside className={`sidebar sidebar-${side}${open ? " open" : ""}`} aria-hidden={!open} inert={!open}>
+    <aside className={`${styles.sidebar} ${styles[side]}${open ? ` ${styles.open}` : ""}`} aria-hidden={!open} inert={!open}>
       <h2>{title}</h2>
-      <div className="sidebar-body">{children}</div>
+      <div className={styles.body}>{children}</div>
     </aside>
   );
 };

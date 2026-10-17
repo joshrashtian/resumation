@@ -5,7 +5,8 @@ import SettingsPage from "./components/SettingsPage";
 import { docxToHtml } from "./converter";
 import { useSettings } from "./settings";
 import { PageLayout } from "./pageLayout";
-import "./App.css";
+import "./global.css";
+import styles from "./App.module.css";
 import EditorFooter from "./components/EditorFooter";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
@@ -108,7 +109,7 @@ function App() {
 
   return (
     <div
-      className="app"
+      className={styles.app}
       style={
         {
           "--sidebar-width": `${SIDEBAR_WIDTH}px`,
@@ -144,7 +145,7 @@ function App() {
         </dl>
       </Sidebar>
 
-      <main className="main">
+      <main className={styles.main}>
         <input
           ref={fileInput}
           type="file"

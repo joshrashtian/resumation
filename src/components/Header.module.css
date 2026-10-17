@@ -19,26 +19,42 @@
 }
 
 /* Clear the macOS traffic lights (trafficLightPosition in tauri.conf.json). */
-:root[data-platform="mac"] .titlebar {
+:global(:root[data-platform="mac"]) .titlebar {
     padding-left: 80px;
 }
 
-.titlebar-group {
+.group {
     display: flex;
     align-items: center;
     gap: 8px;
     height: 100%;
 }
 
-.titlebar-button {
-    height: 30px;
-    width: 30px;
+/* Plain icons that sit beside the macOS traffic lights, like Finder's
+   sidebar toggle: no fill or border, just a soft highlight on hover. */
+.button {
+    height: 28px;
+    width: 28px;
     padding: 0;
-    border-radius: 100%;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    box-shadow: none;
+    color: rgba(0, 0, 0, 0.55);
+    font-size: 18px;
+}
+
+.button:hover {
+    background-color: rgba(0, 0, 0, 0.06);
+    color: rgba(0, 0, 0, 0.8);
+}
+
+.button:active {
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
 /* Centred on the window, not between the button groups. */
-.titlebar-title {
+.title {
     position: absolute;
     left: 50%;
     top: 0;
@@ -53,35 +69,35 @@
 }
 
 /* Clicks fall through to the title itself so it stays a drag handle. */
-.titlebar-title * {
+.title * {
     pointer-events: none;
 }
 
-.titlebar-app {
+.app {
     font-weight: 700;
 }
 
-.titlebar-sep {
+.sep {
     opacity: 0.35;
 }
 
-.titlebar-file {
+.file {
     overflow: hidden;
     text-overflow: ellipsis;
     font-weight: 500;
 }
 
-.titlebar-file.untitled {
+.file.untitled {
     opacity: 0.5;
 }
 
-.window-controls {
+.windowControls {
     display: flex;
     gap: 2px;
     margin-left: 4px;
 }
 
-.window-controls button {
+.windowControls button {
     height: 30px;
     width: 38px;
     padding: 0;
@@ -92,21 +108,36 @@
     color: inherit;
 }
 
-.window-controls button:hover {
+.windowControls button:hover {
     background-color: rgba(0, 0, 0, 0.08);
 }
 
-.window-controls button.close:hover {
+.windowControls button.close:hover {
     background-color: #e81123;
     color: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
-    .window-controls button {
+    /* :global(:root) (0,3,0) beats global.css's dark and solid button fills. */
+    :global(:root) .titlebar .button {
+        background: transparent;
+        color: rgba(255, 255, 255, 0.55);
+    }
+
+    :global(:root) .titlebar .button:hover {
+        background-color: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.85);
+    }
+
+    :global(:root) .titlebar .button:active {
+        background-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .windowControls button {
         background: transparent;
     }
 
-    .window-controls button:hover {
+    .windowControls button:hover {
         background-color: rgba(255, 255, 255, 0.1);
     }
 }

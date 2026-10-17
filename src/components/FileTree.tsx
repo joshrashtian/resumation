@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { FaChevronDown, FaChevronRight, FaFileWord, FaRegFileLines, FaRegFolder } from "react-icons/fa6";
+import styles from "./FileTree.module.css";
 
 export type Entry = {
   name: string;
@@ -37,18 +38,18 @@ const FileTree = ({ folder, refreshKey, onOpenFile }: FolderProps) => {
       return next;
     });
 
-  if (error) return folder ? null : <p className="empty">Couldn't read the documents folder.</p>;
+  if (error) return folder ? null : <p className={styles.empty}>Couldn't read the documents folder.</p>;
   if (!entries) return null;
-  if (!entries.length) return <p className="empty">{folder ? "Empty folder" : "No documents yet."}</p>;
+  if (!entries.length) return <p className={styles.empty}>{folder ? "Empty folder" : "No documents yet."}</p>;
 
   return (
-    <ul className={folder ? "file-tree nested" : "file-tree"}>
+    <ul className={folder ? `${styles.tree} ${styles.nested}` : styles.tree}>
       {entries.map((entry) => (
         <li key={entry.path}>
           {entry.is_dir ? (
             <>
               <button title={entry.name} onClick={() => toggle(entry.path)}>
-                {expanded.has(entry.path) ? <FaChevronDown className="chevron" /> : <FaChevronRight className="chevron" />}
+                {expanded.has(entry.path) ? <FaChevronDown className={styles.chevron} /> : <FaChevronRight className={styles.chevron} />}
                 <FaRegFolder />
                 <span>{entry.name}</span>
               </button>
@@ -58,7 +59,7 @@ const FileTree = ({ folder, refreshKey, onOpenFile }: FolderProps) => {
             </>
           ) : (
             <button title={entry.name} onClick={() => onOpenFile(entry.path)}>
-              <span className="chevron" />
+              <span className={styles.chevron} />
 
                 {entry.name.includes(".docx") ? <FaFileWord /> :     <FaRegFileLines />}
               <span>{entry.name}</span>

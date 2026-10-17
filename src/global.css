@@ -1,11 +1,10 @@
-
 :root {
   font-family:  DM Sans, Inter, Avenir, Helvetica, Arial, sans-serif;
   font-size: 16px;
   line-height: 24px;
   font-weight: 400;
 
-  color: rgba(0, 0, 0, 0.85);
+  color: rgba(0, 0, 0, 0.95);
   background-color: transparent;
 
   font-synthesis: none;
@@ -13,27 +12,6 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
-}
-
-.container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.row {
-  display: flex;
-  justify-content: center;
 }
 
 a {
@@ -46,8 +24,6 @@ a:hover {
   color: #535bf2;
 }
 
-
-
 /* Frameless window: native page scrollbars would sit on the window's edge,
    outside the rounded glass. Keep scrolling, hide the bars. */
 html {
@@ -59,6 +35,11 @@ html::-webkit-scrollbar {
   display: none;
 }
 
+/* Room for the fixed footer. */
+body {
+  padding-bottom: 40px;
+}
+
 button {
   cursor: pointer;
   display: flex;
@@ -67,14 +48,9 @@ button {
   border-radius: 12px;
 }
 
-
 input,
 button {
   outline: none;
-}
-
-#greet-input {
-  margin-right: 5px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -97,26 +73,9 @@ button {
   }
 }
 
-.app {
-  --titlebar-height: 52px;
-}
-
-/* Leave room for whichever sidebars are open. */
-.main {
-  margin-left: var(--left-space);
-  margin-right: var(--right-space);
-  padding-top: var(--titlebar-height);
-  transition: margin 0.2s ease;
-}
-
-.app footer {
-  left: calc(var(--left-space) + (100% - var(--left-space) - var(--right-space)) / 2);
-  width: calc((100% - var(--left-space) - var(--right-space)) * 0.7);
-  transition: left 0.2s ease, width 0.2s ease;
-}
-
 /* Transparency off: paint a solid window background behind everything and
-   make the glassy panels opaque. Rounded to match the window's corners. */
+   make the glassy panels opaque. Rounded to match the window's corners.
+   Panels pick these up in their own modules. */
 :root[data-transparency="off"] {
   --solid-bg: #ececec;
   --solid-panel: #f7f7f7;
@@ -132,19 +91,6 @@ button {
   z-index: -1;
 }
 
-:root[data-transparency="off"] .sidebar,
-:root[data-transparency="off"] footer {
-  background-color: var(--solid-panel);
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-}
-
-:root[data-transparency="off"] .editor {
-  background-color: var(--solid-surface);
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-}
-
 @media (prefers-color-scheme: dark) {
   :root[data-transparency="off"] {
     --solid-bg: #1c1c1e;
@@ -153,7 +99,7 @@ button {
   }
 
   :root[data-transparency="off"] input,
-  :root[data-transparency="off"] button:not(.sidebar-body button) {
+  :root[data-transparency="off"] button {
     background-color: #0f0f0f;
   }
 }

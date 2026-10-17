@@ -1,4 +1,5 @@
 .editor {
+  --page-break: rgba(57, 108, 216, 0.5);
   width: fit-content;
   max-width: 100%;
   margin: 2rem auto;
@@ -10,7 +11,7 @@
   text-align: left;
 }
 
-.editor-toolbar {
+.toolbar {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
@@ -18,16 +19,14 @@
   border-bottom: 1px solid #d0d0d0;
 }
 
-
-
-.editor-toolbar button {
+.toolbar button {
   padding: 0.3em 0.7em;
   font-size: 0.875em;
   box-shadow: none;
   border: 1px solid #d0d0d0;
 }
 
-.editor-toolbar select {
+.toolbar select {
   padding: 0.3em 0.5em;
   font-size: 0.875em;
   font-family: inherit;
@@ -37,13 +36,13 @@
   color: inherit;
 }
 
-.editor-toolbar button.active {
+.toolbar button.active {
   background-color: #396cd8;
   border-color: #396cd8;
   color: #ffffff;
 }
 
-.editor-toolbar button:disabled {
+.toolbar button:disabled {
   opacity: 0.4;
   cursor: default;
 }
@@ -51,7 +50,7 @@
 /* The editor is the width of the page's text area (page width minus margins)
    so lines wrap like the printed page, and a line marks where each page of
    text ends. Sizes come from the document via CSS variables. */
-.editor-content .tiptap {
+.content :global(.tiptap) {
   position: relative;
   box-sizing: content-box;
   width: var(--page-text-width);
@@ -74,37 +73,40 @@
 }
 
 /* With a page limit, show the full allowed area. */
-.editor.limited .editor-content .tiptap {
+.editor.limited .content :global(.tiptap) {
   min-height: calc(var(--pages) * var(--page-text-height));
 }
 
 /* Imported paragraphs set their own spacing; these are defaults for new text. */
-.editor-content .tiptap p,
-.editor-content .tiptap h1,
-.editor-content .tiptap h2,
-.editor-content .tiptap h3 {
+.content :global(.tiptap) p,
+.content :global(.tiptap) h1,
+.content :global(.tiptap) h2,
+.content :global(.tiptap) h3 {
   margin: 0 0 6pt;
 }
 
-.editor-content .tiptap ul,
-.editor-content .tiptap ol {
+.content :global(.tiptap) ul,
+.content :global(.tiptap) ol {
   margin: 0;
   padding-left: 0.5in;
 }
 
-.editor-content .tiptap hr {
+.content :global(.tiptap) hr {
   border: none;
   border-top: 1px solid #a0a0a0;
   margin: 2pt 0;
 }
 
-/* Text after a right-aligned tab stop, e.g. dates on resume entries. */
-.editor-content .tiptap .right-tab {
+/* Text after a right-aligned tab stop, e.g. dates on resume entries.
+   The class comes from the RightTab extension, so it stays global. */
+.content :global(.tiptap .right-tab) {
   float: right;
 }
 
-.editor {
-  --page-break: rgba(57, 108, 216, 0.5);
+:global(:root[data-transparency="off"]) .editor {
+  background-color: var(--solid-surface);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -113,9 +115,14 @@
     border-color: rgba(255, 255, 255, 0.12);
   }
 
-  .editor-toolbar,
-  .editor-toolbar button,
-  .editor-toolbar select {
+  .toolbar,
+  .toolbar button,
+  .toolbar select {
     border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  /* Beat the solid button background from global.css. */
+  :global(:root[data-transparency="off"]) .toolbar button.active {
+    background-color: #396cd8;
   }
 }
