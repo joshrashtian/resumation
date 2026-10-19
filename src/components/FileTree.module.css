@@ -22,10 +22,15 @@
     flex-shrink: 0;
 }
 
+/* Resumation's own files (editor files, text blocks) show an accent icon instead of an extension. */
+.resumation {
+    color: #396cd8;
+}
+
 .tree li button span:not(.chevron) {
     overflow: hidden;
     text-overflow: ellipsis;
-    font-family: monospace;
+    font-family: "DM Mono", monospace;
 }
 
 .chevron {

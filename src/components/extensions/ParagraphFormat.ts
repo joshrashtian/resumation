@@ -5,6 +5,12 @@ declare module "@tiptap/core" {
     paragraphFormat: {
       setLineSpacing: (lineSpacing: string) => ReturnType;
       unsetLineSpacing: () => ReturnType;
+      // Moves the left indent by a number of points, never below zero.
+      changeIndent: (by: number) => ReturnType;
+      // Like Word's Increase/Decrease Indent (Tab / Shift-Tab): nests or
+      // un-nests bullets, and moves other paragraphs by half an inch.
+      indent: () => ReturnType;
+      outdent: () => ReturnType;
     };
   }
 }
@@ -12,6 +18,9 @@ declare module "@tiptap/core" {
 // Word's "single" spacing is the font's natural line height, about 1.2x the
 // font size, so a Word multiple like 1.08 becomes a CSS line-height of ~1.3.
 const SINGLE_LINE = 1.2;
+
+// Word's default indent step, half an inch.
+const INDENT_STEP = 36;
 
 function lineHeightCss(lineSpacing: string): string {
   if (lineSpacing.endsWith("pt")) return lineSpacing; // exact height
@@ -77,6 +86,58 @@ export const ParagraphFormat = Extension.create({
           this.options.types
             .map((type: string) => commands.resetAttributes(type, "lineSpacing"))
             .some(Boolean),
+      changeIndent:
+        (by) =>
+        ({ state, tr, dispatch }) => {
+          const { from, to } = state.selection;
+          let changed = false;
+          state.doc.nodesBetween(from, to, (node, pos) => {
+            if (!this.options.types.includes(node.type.name)) return true;
+            const current = parseFloat(node.attrs.indent ?? "0") || 0;
+            const next = Math.max(0, current + by);
+            if (next !== current) {
+              changed = true;
+              // A hanging indent with no left indent would push text off the page.
+              const firstLineIndent = next === 0 && parseFloat(node.attrs.firstLineIndent ?? "0") < 0 ? null : node.attrs.firstLineIndent;
+              if (dispatch) tr.setNodeMarkup(pos, undefined, { ...node.attrs, indent: next ? `${next}pt` : null, firstLineIndent });
+            }
+            return false;
+          });
+          return changed;
+        },
+      indent:
+        () =>
+        ({ editor, commands }) =>
+          editor.isActive("listItem") ? commands.sinkListItem("listItem") : commands.changeIndent(INDENT_STEP),
+      // In a list, any extra indent Word gave the bullet goes first, then the bullet un-nests.
+      outdent:
+        () =>
+        ({ editor, commands }) =>
+          editor.isActive("listItem")
+            ? commands.changeIndent(-INDENT_STEP) || commands.liftListItem("listItem")
+            : commands.changeIndent(-INDENT_STEP),
+    };
+  },
+
+  addKeyboardShortcuts() {
+    // Always handled, so Tab never moves focus out of the document.
+    return {
+      Tab: () => (this.editor.commands.indent(), true),
+      "Shift-Tab": () => (this.editor.commands.outdent(), true),
+      // As in Word: Backspace at the very start of an indented line removes the
+      // first-line indent, then the left indent, before it joins lines. Bullets
+      // keep their own Backspace (un-bullet).
+      Backspace: () => {
+        const { selection } = this.editor.state;
+        const { $from } = selection;
+        const line = $from.parent;
+        if (!selection.empty || $from.parentOffset !== 0) return false;
+        if (!this.options.types.includes(line.type.name) || this.editor.isActive("listItem")) return false;
+        if (parseFloat(line.attrs.firstLineIndent ?? "0") > 0) {
+          return this.editor.commands.updateAttributes(line.type.name, { firstLineIndent: null });
+        }
+        return this.editor.commands.changeIndent(-INDENT_STEP);
+      },
     };
   },
 });

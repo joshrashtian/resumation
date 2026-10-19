@@ -1,0 +1,70 @@
+.codeView {
+    max-width: min(900px, calc(100% - 32px));
+    margin: 2rem auto;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.55);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    text-align: left;
+    overflow: hidden;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 0.8125em;
+}
+
+.lang {
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.meta {
+    flex: 1;
+    opacity: 0.6;
+}
+
+.copy {
+    gap: 6px;
+    padding: 3px 10px;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    background: transparent;
+    box-shadow: none;
+    font-size: 0.9em;
+    font-family: inherit;
+    color: inherit;
+}
+
+/* Fills the window below the tab bar, clear of the footer. */
+.code {
+    height: calc(100vh - 260px);
+    min-height: 240px;
+}
+
+:global(:root[data-transparency="off"]) .codeView {
+    background-color: var(--solid-surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    .codeView {
+        background-color: rgba(31, 31, 31, 0.45);
+        border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .header {
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    :global(:root) .copy {
+        background: transparent;
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+}

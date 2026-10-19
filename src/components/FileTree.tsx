@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { FaChevronDown, FaChevronRight, FaFileWord, FaRegFileLines, FaRegFolder } from "react-icons/fa6";
+import { FaChevronDown, FaChevronRight, FaFileWord, FaListUl, FaPencil, FaRegFileLines, FaRegFolder } from "react-icons/fa6";
+import { displayName, isResumationFile } from "../fileTypes";
+import { isBlocksFile } from "../lib/blocks";
 import styles from "./FileTree.module.css";
 
 export type Entry = {
@@ -10,26 +12,39 @@ export type Entry = {
 };
 
 type FolderProps = {
-
+  project: string;
   folder?: string;
 
   refreshKey: number;
   onOpenFile: (path: string) => void;
 };
 
-const FileTree = ({ folder, refreshKey, onOpenFile }: FolderProps) => {
+const FileIcon = ({ name }: { name: string }) => {
+  if (isResumationFile(name)) return <FaPencil className={styles.resumation} />;
+  if (isBlocksFile(name)) return <FaListUl className={styles.resumation} />;
+  if (name.toLowerCase().endsWith(".docx")) return <FaFileWord />;
+  return <FaRegFileLines />;
+};
+
+function fileTitle(name: string) {
+  if (isResumationFile(name)) return `${displayName(name)} — Resumation Editor File`;
+  if (isBlocksFile(name)) return `${displayName(name)} — Text Blocks`;
+  return name;
+}
+
+const FileTree = ({ project, folder, refreshKey, onOpenFile }: FolderProps) => {
   const [entries, setEntries] = useState<Entry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    invoke<Entry[]>("list_documents", { folder })
+    invoke<Entry[]>("list_documents", { project, folder })
       .then((list) => {
         setEntries(list);
         setError(null);
       })
       .catch((err) => setError(String(err)));
-  }, [folder, refreshKey]);
+  }, [project, folder, refreshKey]);
 
   const toggle = (path: string) =>
     setExpanded((prev) => {
@@ -54,15 +69,17 @@ const FileTree = ({ folder, refreshKey, onOpenFile }: FolderProps) => {
                 <span>{entry.name}</span>
               </button>
               {expanded.has(entry.path) && (
-                <FileTree folder={entry.path} refreshKey={refreshKey} onOpenFile={onOpenFile} />
+                <FileTree project={project} folder={entry.path} refreshKey={refreshKey} onOpenFile={onOpenFile} />
               )}
             </>
           ) : (
-            <button title={entry.name} onClick={() => onOpenFile(entry.path)}>
+            <button
+              title={fileTitle(entry.name)}
+              onClick={() => onOpenFile(entry.path)}
+            >
               <span className={styles.chevron} />
-
-                {entry.name.includes(".docx") ? <FaFileWord /> :     <FaRegFileLines />}
-              <span>{entry.name}</span>
+              <FileIcon name={entry.name} />
+              <span>{displayName(entry.name)}</span>
             </button>
           )}
         </li>

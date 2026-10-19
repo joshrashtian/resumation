@@ -1,0 +1,66 @@
+.picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: min(320px, 100%);
+}
+
+.projects {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-height: 50vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.projects a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: inherit;
+  text-decoration: none;
+  text-align: left;
+}
+
+.projects a:hover {
+  background: rgba(127, 127, 127, 0.15);
+}
+
+.projects span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.empty {
+  margin: 0;
+  opacity: 0.7;
+}
+
+.create {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.create input {
+  flex: 1;
+  min-width: 0;
+  font-family: monospace;
+  height: 20px;
+  background-color: light-gray;
+  font-size: 13px
+}
+
+.error {
+  margin: 0;
+  color: #c0392b;
+  font-size: 13px;
+}

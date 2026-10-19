@@ -46,7 +46,10 @@ pub fn run() {
             directory::read_document,
             directory::read_document_bytes,
             directory::save_document,
+            directory::create_document,
             directory::list_documents,
+            directory::list_projects,
+            directory::create_project,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

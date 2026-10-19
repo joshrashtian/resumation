@@ -1,23 +1,24 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { FaGear, FaPencil, FaUpload } from "react-icons/fa6";
-import { LuMinus, LuPanelLeft, LuPanelRight, LuSquare, LuX } from "react-icons/lu";
+import { FaFloppyDisk, FaGear, FaPencil, FaUpload } from "react-icons/fa6";
+import { LuHouse, LuMinus, LuPanelLeft, LuPanelRight, LuSquare, LuX } from "react-icons/lu";
 import styles from "./Header.module.css";
 
 type HeaderProps = {
+  projectName: string;
   fileName?: string;
+  onHome: () => void;
   leftOpen: boolean;
   rightOpen: boolean;
   onToggleLeft: () => void;
   onToggleRight: () => void;
   onUpload: () => void;
+  onSave: () => void;
   onSettings: () => void;
 };
 
 const isWindows = navigator.userAgent.includes("Windows");
 
-// Custom title bar for the frameless window. Empty areas and text carry
-// data-tauri-drag-region so the window can be dragged from them; buttons don't.
-const Header = ({ fileName, leftOpen, rightOpen, onToggleLeft, onToggleRight, onUpload, onSettings }: HeaderProps) => {
+const Header = ({ projectName, fileName, onHome, leftOpen, rightOpen, onToggleLeft, onToggleRight, onUpload, onSave, onSettings }: HeaderProps) => {
   const win = getCurrentWindow();
 
   return (
@@ -31,14 +32,22 @@ const Header = ({ fileName, leftOpen, rightOpen, onToggleLeft, onToggleRight, on
         >
           <LuPanelLeft />
         </button>
-        <button title="Open Word document" className={styles.button} onClick={onUpload}>
+        <button title="All projects" className={styles.button} onClick={onHome}>
+          <LuHouse />
+        </button>
+        <button title="Add Word document to project" className={styles.button} onClick={onUpload}>
           <FaUpload />
+        </button>
+        <button title="Save (⌘S)" className={styles.button} onClick={onSave}>
+          <FaFloppyDisk />
         </button>
       </div>
 
       <div className={styles.title} data-tauri-drag-region>
         <FaPencil />
         <span className={styles.app}>Resumation</span>
+        <span className={styles.sep}>/</span>
+        <span className={styles.file}>{projectName}</span>
         <span className={styles.sep}>/</span>
         <span className={fileName ? styles.file : `${styles.file} ${styles.untitled}`}>{fileName ?? "Untitled"}</span>
       </div>

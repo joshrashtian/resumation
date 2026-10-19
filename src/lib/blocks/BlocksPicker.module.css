@@ -1,0 +1,183 @@
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.picker select {
+  width: 100%;
+}
+
+.empty {
+  margin: 0;
+  opacity: 0.6;
+}
+
+.blocks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.blocks li {
+  position: relative;
+}
+
+/* :global(:root) beats global.css's button fills in every theme. */
+:global(:root) .block {
+  display: block;
+  width: 100%;
+  padding: 7px 34px 7px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.7);
+  box-shadow: none;
+  text-align: left;
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+:global(:root) .block:hover:not(:disabled) {
+  border-color: #396cd8;
+}
+
+:global(:root) .newLine {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  box-shadow: none;
+  color: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+}
+
+.blocks li:hover .newLine:not(:disabled),
+.newLine:focus-visible {
+  opacity: 1;
+}
+
+:global(:root) .newLine:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.85);
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root) .block {
+    border-color: rgba(255, 255, 255, 0.12);
+    background-color: rgba(30, 30, 30, 0.6);
+  }
+
+  :global(:root) .newLine {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  :global(:root) .newLine:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
+}
+
+.template {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
+:global(:root) .templateName {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.templateName span:first-of-type {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.templateIcon {
+  flex: none;
+  opacity: 0.55;
+}
+
+.count {
+  font-weight: 400;
+  opacity: 0.6;
+}
+
+.templateBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 10px 8px;
+  font-size: 12.5px;
+}
+
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rows label {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  overflow-wrap: anywhere;
+}
+
+.templateActions {
+  display: flex;
+  gap: 4px;
+}
+
+:global(:root) .templateActions button {
+  font-size: 12.5px;
+  padding: 4px 10px;
+}
+
+:global(:root) .templateActions .iconButton {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .template {
+    border-color: rgba(255, 255, 255, 0.12);
+    background-color: rgba(30, 30, 30, 0.6);
+  }
+}
+
+.group {
+  display: block;
+  margin-top: 2px;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.rows .rows {
+  padding-left: 18px;
+}

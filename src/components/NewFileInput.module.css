@@ -1,0 +1,13 @@
+.form {
+  margin: 0 0 8px;
+}
+
+.form input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 5px 8px;
+  border: 1px solid #396cd8;
+  border-radius: 8px;
+  font-family: "DM Mono", monospace;
+  font-size: 13px;
+}

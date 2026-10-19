@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
+import { EditorContent, JSONContent, useEditor, useEditorState, type Editor as TiptapEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Color, FontFamily, FontSize, TextStyle } from "@tiptap/extension-text-style";
 import TextAlign from "@tiptap/extension-text-align";
@@ -9,7 +9,8 @@ import { PageLimit, contentHeight } from "./extensions/PageLimit";
 import { FONTS } from "../fontOptions";
 import { DEFAULT_LAYOUT, PageLayout } from "../pageLayout";
 import styles from "./Editor.module.css";
-import { Fa1, FaArrowRotateLeft, FaAlignCenter, FaAlignJustify, FaAlignLeft, FaAlignRight, FaArrowRotateRight, FaBold, FaHeading, FaItalic, FaUnderline } from "react-icons/fa6";
+import { LuIndentDecrease, LuIndentIncrease } from "react-icons/lu";
+import { FaArrowRotateLeft, FaAlignCenter, FaAlignJustify, FaAlignLeft, FaAlignRight, FaArrowRotateRight, FaBold, FaItalic, FaUnderline } from "react-icons/fa6";
 
 // Resume sizes are usually given in points (body text 10–12pt).
 const FONT_SIZES = ["8", "9", "10", "10.5", "11", "12", "14", "16", "18", "20", "24", "28", "36"];
@@ -34,14 +35,16 @@ export type PageStatus = {
 };
 
 type EditorProps = {
-  content?: string;
-  onChange?: (html: string) => void;
+  content?: string | JSONContent;
+  onChange?: (html: string, json: JSONContent) => void;
   pageLimit?: number;
   layout?: PageLayout;
   onPageStatusChange?: (status: PageStatus) => void;
+  // Hands the Tiptap editor to the parent, and null once it goes away.
+  onReady?: (editor: TiptapEditor | null) => void;
 };
 
-function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT, onPageStatusChange }: EditorProps) {
+function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT, onPageStatusChange, onReady }: EditorProps) {
 
   const textWidth = layout.width - layout.marginLeft - layout.marginRight;
   const textHeight = layout.height - layout.marginTop - layout.marginBottom;
@@ -59,7 +62,8 @@ function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT
       PageLimit,
     ],
     content,
-    onUpdate: ({ editor }) => onChange?.(editor.getHTML()),
+    onCreate: ({ editor }) => onChange?.(editor.getHTML(), editor.getJSON()),
+    onUpdate: ({ editor }) => onChange?.(editor.getHTML(), editor.getJSON()),
   });
 
   const [pageUsage, setPageUsage] = useState(0);
@@ -91,6 +95,13 @@ function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT
       storage.onBlocked = undefined;
     };
   }, [editor, pageLimit, textHeight]);
+
+  const onReadyRef = useRef(onReady);
+  onReadyRef.current = onReady;
+  useEffect(() => {
+    onReadyRef.current?.(editor);
+    return () => onReadyRef.current?.(null);
+  }, [editor]);
 
   const onPageStatusChangeRef = useRef(onPageStatusChange);
   onPageStatusChangeRef.current = onPageStatusChange;
@@ -218,6 +229,12 @@ function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT
         </button>
         <button className={state.orderedList ? styles.active : ""} onClick={() => editor.chain().focus().toggleOrderedList().run()}>
           1. List
+        </button>
+        <button title="Decrease indent (⇧Tab)" onClick={() => editor.chain().focus().outdent().run()}>
+          <LuIndentDecrease />
+        </button>
+        <button title="Increase indent (Tab)" onClick={() => editor.chain().focus().indent().run()}>
+          <LuIndentIncrease />
         </button>
         <button disabled={!state.canUndo} onClick={() => editor.chain().focus().undo().run()}>
           <FaArrowRotateLeft />

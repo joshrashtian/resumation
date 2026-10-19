@@ -33,11 +33,37 @@
     pointer-events: auto;
 }
 
-.sidebar h2 {
+.heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     margin: 0 0 8px;
+}
+
+.sidebar h2 {
+    margin: 0;
     font-size: 1em;
     font-weight: 600;
     opacity: 0.8;
+}
+
+/* Small icon buttons beside the title, styled like the titlebar's. */
+.action button {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    box-shadow: none;
+    color: rgba(0, 0, 0, 0.55);
+    font-size: 15px;
+}
+
+.action button:hover,
+.action button[aria-pressed="true"] {
+    background-color: rgba(0, 0, 0, 0.06);
+    color: rgba(0, 0, 0, 0.85);
 }
 
 .body {
@@ -70,5 +96,17 @@
 @media (prefers-color-scheme: dark) {
     .sidebar {
         background-color: rgba(63, 63, 63, 0.5);
+    }
+
+    /* :global(:root) beats global.css's dark button fill. */
+    :global(:root) .action button {
+        background: transparent;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    :global(:root) .action button:hover,
+    :global(:root) .action button[aria-pressed="true"] {
+        background-color: rgba(255, 255, 255, 0.08);
+        color: #fff;
     }
 }
