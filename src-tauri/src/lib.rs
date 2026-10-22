@@ -1,5 +1,6 @@
 mod directory;
 mod settings;
+mod merkle_tree;
 
 use tauri::Manager;
 
