@@ -1,0 +1,107 @@
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.empty {
+  margin: 0;
+  opacity: 0.6;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.variants {
+  display: flex;
+  gap: 4px;
+}
+
+.variants select {
+  flex: 1;
+  min-width: 0;
+}
+
+/* :global(:root) beats global.css's button fills in every theme. */
+:global(:root) .icon {
+  flex: none;
+  width: 28px;
+  padding: 0;
+  font-size: 15px;
+}
+
+:global(:root) .icon[aria-pressed="true"] {
+  border-color: #396cd8;
+}
+
+:global(:root) .save {
+  width: 100%;
+  padding: 5px 8px;
+  font-size: 12.5px;
+}
+
+:global(:root) .version {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.7);
+  box-shadow: none;
+  text-align: left;
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+:global(:root) .version:hover,
+:global(:root) .version[aria-pressed="true"] {
+  border-color: #396cd8;
+}
+
+/* The version a variant started from, which belongs to another variant. */
+:global(:root) .origin {
+  border-style: dashed;
+}
+
+.name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.current {
+  padding: 0 5px;
+  border-radius: 4px;
+  background-color: rgba(57, 108, 216, 0.15);
+  color: #396cd8;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.meta {
+  opacity: 0.6;
+  font-size: 11.5px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root) .version {
+    border-color: rgba(255, 255, 255, 0.12);
+    background-color: rgba(30, 30, 30, 0.6);
+  }
+
+  .current {
+    color: #7ea2ef;
+  }
+}

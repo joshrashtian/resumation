@@ -22,3 +22,39 @@
   font-weight: 600;
   opacity: 0.8;
 }
+
+/* Sits under the titlebar while an old version is showing. */
+.previewBar {
+  position: sticky;
+  top: var(--titlebar-height);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px auto;
+  padding: 6px 6px 6px 14px;
+  width: fit-content;
+  max-width: calc(100% - 32px);
+  box-sizing: border-box;
+  border-radius: 12px;
+  background-color: rgba(57, 108, 216, 0.12);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  font-size: 0.875em;
+}
+
+.previewBar span {
+  margin-right: 4px;
+}
+
+.previewBar button {
+  padding: 4px 10px;
+  font-size: 12.5px;
+}
+
+.blocksFrame {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}

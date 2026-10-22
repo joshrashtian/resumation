@@ -1,7 +1,6 @@
 mod directory;
 mod settings;
-mod merkle_tree;
-
+mod version_control;
 use tauri::Manager;
 
 #[cfg(target_os = "macos")]
@@ -51,6 +50,12 @@ pub fn run() {
             directory::list_documents,
             directory::list_projects,
             directory::create_project,
+            version_control::save_version,
+            version_control::list_versions,
+            version_control::read_version,
+            version_control::restore_version,
+            version_control::create_document_variant,
+            version_control::switch_document_variant,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

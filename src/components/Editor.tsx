@@ -42,9 +42,11 @@ type EditorProps = {
   onPageStatusChange?: (status: PageStatus) => void;
   // Hands the Tiptap editor to the parent, and null once it goes away.
   onReady?: (editor: TiptapEditor | null) => void;
+  // False shows the document read-only, e.g. while previewing an old version.
+  editable?: boolean;
 };
 
-function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT, onPageStatusChange, onReady }: EditorProps) {
+function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT, onPageStatusChange, onReady, editable = true }: EditorProps) {
 
   const textWidth = layout.width - layout.marginLeft - layout.marginRight;
   const textHeight = layout.height - layout.marginTop - layout.marginBottom;
@@ -95,6 +97,10 @@ function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT
       storage.onBlocked = undefined;
     };
   }, [editor, pageLimit, textHeight]);
+
+  useEffect(() => {
+    editor.setEditable(editable);
+  }, [editor, editable]);
 
   const onReadyRef = useRef(onReady);
   onReadyRef.current = onReady;

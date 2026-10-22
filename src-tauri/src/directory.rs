@@ -27,7 +27,7 @@ fn valid_project_name(name: &str) -> bool {
 }
 
 // ResumationData/<name>, created if it does not exist yet.
-fn project_dir(app: &AppHandle, name: &str) -> Result<PathBuf, String> {
+pub(crate) fn project_dir(app: &AppHandle, name: &str) -> Result<PathBuf, String> {
     if !valid_project_name(name) {
         return Err("invalid project name".into());
     }
@@ -39,7 +39,7 @@ fn project_dir(app: &AppHandle, name: &str) -> Result<PathBuf, String> {
 
 // Resolves a path relative to a project's folder, rejecting anything that
 // could escape it (.., absolute paths, hidden files).
-fn safe_path(app: &AppHandle, project: &str, relative: &str) -> Result<PathBuf, String> {
+pub(crate) fn safe_path(app: &AppHandle, project: &str, relative: &str) -> Result<PathBuf, String> {
     let path = Path::new(relative);
     let is_safe = path.components().all(|c| match c {
         Component::Normal(name) => !name.to_string_lossy().starts_with('.'),

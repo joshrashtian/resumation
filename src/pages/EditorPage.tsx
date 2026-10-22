@@ -26,9 +26,13 @@ import FileTree from "../components/FileTree";
 import TabBar, { TabItem } from "../components/TabBar";
 import CodeView from "../components/CodeView";
 import NewFileInput from "../components/NewFileInput";
+import VersionHistory, { EMPTY_HISTORY, History, Version } from "../components/VersionHistory";
 import { LuBraces, LuCode, LuFileText, LuPlus } from "react-icons/lu";
 
 const SIDEBAR_WIDTH = 240;
+
+// Text Blocks save themselves constantly, so they keep at most one automatic version per file this often.
+const AUTO_VERSION_INTERVAL = 5 * 60 * 1000;
 
 type View = "document" | "html" | "json";
 
@@ -52,6 +56,9 @@ type Doc = {
 };
 
 type OpenBlocks = { path: string; name: string; blocks: Block[] };
+
+// An old version shown read-only in place of the file, until it's restored or left.
+type Preview = { path: string; version: Version };
 
 const folderOf = (path: string) => (path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : "");
 const withoutExtension = (name: string) => name.replace(/\.[^.]+$/, "") || name;
@@ -92,6 +99,9 @@ function EditorPage({ project }: EditorPageProps) {
   const [rightOpen, toggleRight] = useStoredToggle("resumation.sidebar.right", false);
   const [filesVersion, setFilesVersion] = useState(0);
   const [view, setView] = useState<View>("document");
+  const [preview, setPreview] = useState<Preview | null>(null);
+  const [versionsVersion, setVersionsVersion] = useState(0);
+  const [history, setHistory] = useState<History>(EMPTY_HISTORY);
 
   // The editor reports every change here. Only copy it into state while a
   // code tab is showing, so typing in the document doesn't re-render App.
@@ -151,6 +161,18 @@ function EditorPage({ project }: EditorPageProps) {
   // Text Blocks save themselves shortly after each change, and right away
   // before another file opens or the editor closes.
   const unsavedBlocks = useRef<OpenBlocks | null>(null);
+  const lastAutoVersion = useRef(new Map<string, number>());
+
+  // Records a version of a saved file. Unchanged contents don't add one, and
+  // a failure here never fails the save itself.
+  async function saveVersion(path: string, message = "") {
+    try {
+      await invoke("save_version", { project, name: path, message });
+      setVersionsVersion((v) => v + 1);
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
   async function flushBlocks() {
     const pending = unsavedBlocks.current;
@@ -160,6 +182,11 @@ function EditorPage({ project }: EditorPageProps) {
     try {
       await invoke("save_document", { project, name: pending.path, contents: JSON.stringify(file, null, 2) });
       setFilesVersion((v) => v + 1);
+      const now = Date.now();
+      if (now - (lastAutoVersion.current.get(pending.path) ?? 0) >= AUTO_VERSION_INTERVAL) {
+        lastAutoVersion.current.set(pending.path, now);
+        await saveVersion(pending.path);
+      }
     } catch (err) {
       console.error(err);
       alert(`Couldn't save ${pending.name}.`);
@@ -169,7 +196,7 @@ function EditorPage({ project }: EditorPageProps) {
   flushBlocksRef.current = flushBlocks;
 
   function changeBlocks(blocks: Block[]) {
-    if (!blocksDoc) return;
+    if (!blocksDoc || preview) return;
     const next = { ...blocksDoc, blocks };
     unsavedBlocks.current = next;
     setBlocksDoc(next);
@@ -226,9 +253,14 @@ function EditorPage({ project }: EditorPageProps) {
   }
 
   // Word files can't be written back, so documents save as a Resumation Editor
-  // File next to where they came from; later saves overwrite that file.
-  async function save() {
-    if (blocksDoc) return flushBlocks();
+  // File next to where they came from; later saves overwrite that file. Every
+  // save also records a version, named when a message is given.
+  async function save(message = "") {
+    if (preview) return;
+    if (blocksDoc) {
+      await flushBlocks();
+      return saveVersion(blocksDoc.path, message);
+    }
     const saved: ResumationFile = {
       name: doc.name ?? null,
       layout: doc.layout ?? DEFAULT_LAYOUT,
@@ -246,6 +278,7 @@ function EditorPage({ project }: EditorPageProps) {
         setDoc((prev) => ({ ...prev, savePath, name: displayName(savePath!.split("/").pop()!) }));
       }
       setFilesVersion((v) => v + 1);
+      await saveVersion(savePath, message);
     } catch (err) {
       console.error(err);
       alert(`Couldn't save to ${project}.`);
@@ -258,11 +291,14 @@ function EditorPage({ project }: EditorPageProps) {
     const name = path.split("/").pop() ?? path;
     const ext = name.toLowerCase().split(".").pop();
     await flushBlocks();
+    setPreview(null);
     try {
       if (isBlocksFile(name)) {
         const file: BlocksFile = JSON.parse(await invoke<string>("read_document", { project, name: path }));
         const blocks = file.blocks?.length ? normalizeBlocks(file.blocks) : [newTextBlock()];
         setBlocksDoc({ path, name: displayName(name), blocks });
+        // Records how the file looked when opened, so the first edits can be undone from history.
+        void saveVersion(path);
       } else if (ext === "docx") {
         const bytes = await invoke<ArrayBuffer>("read_document_bytes", { project, name: path });
         const { html, layout } = await docxToHtml(new File([bytes], name));
@@ -272,6 +308,7 @@ function EditorPage({ project }: EditorPageProps) {
         const saved: ResumationFile = JSON.parse(await invoke<string>("read_document", { project, name: path }));
         setBlocksDoc(null);
         setDoc((prev) => ({ key: prev.key + 1, content: saved.content, layout: saved.layout, name: displayName(name), savePath: path }));
+        void saveVersion(path);
       } else if (ext === "html" || ext === "htm" || ext === "txt") {
         const html = await invoke<string>("read_document", { project, name: path });
         setBlocksDoc(null);
@@ -283,6 +320,89 @@ function EditorPage({ project }: EditorPageProps) {
       console.error(err);
       alert(`Couldn't open ${name}.`);
     }
+  }
+
+  // The file the version history belongs to; documents only get one once saved.
+  const versionPath = blocksDoc?.path ?? doc.savePath ?? null;
+
+  useEffect(() => {
+    if (!versionPath) return setHistory(EMPTY_HISTORY);
+    let cancelled = false;
+    invoke<History>("list_versions", { project, name: versionPath })
+      .then((h) => !cancelled && setHistory(h))
+      .catch(console.error);
+    return () => {
+      cancelled = true;
+    };
+  }, [project, versionPath, versionsVersion]);
+  const hasVariants = Object.keys(history.heads).length > 1;
+
+  // Saves the current state first, so nothing typed is lost while the old version shows.
+  async function previewVersion(version: Version) {
+    if (!versionPath) return;
+    if (!preview) await save();
+    try {
+      const bytes = await invoke<ArrayBuffer>("read_version", { project, name: versionPath, id: version.id });
+      const text = new TextDecoder().decode(bytes);
+      if (blocksDoc) {
+        const file: BlocksFile = JSON.parse(text);
+        setBlocksDoc({ ...blocksDoc, blocks: file.blocks?.length ? normalizeBlocks(file.blocks) : [newTextBlock()] });
+      } else {
+        const saved: ResumationFile = JSON.parse(text);
+        setDoc((prev) => ({ ...prev, key: prev.key + 1, content: saved.content, layout: saved.layout }));
+      }
+      setPreview({ path: versionPath, version });
+    } catch (err) {
+      console.error(err);
+      alert(`Couldn't open version ${version.id}.`);
+    }
+  }
+
+  // Reopening from disk shows the file as it is now.
+  async function leavePreview() {
+    if (preview) await openDocument(preview.path);
+  }
+
+  async function restorePreview() {
+    if (!preview) return;
+    try {
+      await invoke("restore_version", { project, name: preview.path, id: preview.version.id });
+      setFilesVersion((v) => v + 1);
+    } catch (err) {
+      console.error(err);
+      alert(`Couldn't restore version ${preview.version.id}.`);
+      return;
+    }
+    await leavePreview();
+  }
+
+  // Both save what's in the editor first and then reopen the file, which then
+  // holds the variant's contents.
+  async function createVariant(variant: string) {
+    if (!versionPath) return;
+    if (!preview) await save();
+    try {
+      await invoke("create_document_variant", { project, name: versionPath, variant });
+    } catch (err) {
+      console.error(err);
+      alert(String(err) === "variant exists" ? `There's already a variant called ${variant}.` : `Couldn't create ${variant}.`);
+      return;
+    }
+    await openDocument(versionPath);
+  }
+
+  async function switchVariant(variant: string) {
+    if (!versionPath) return;
+    if (!preview) await save();
+    try {
+      await invoke("switch_document_variant", { project, name: versionPath, variant });
+      setFilesVersion((v) => v + 1);
+    } catch (err) {
+      console.error(err);
+      alert(`Couldn't switch to ${variant}.`);
+      return;
+    }
+    await openDocument(versionPath);
   }
 
   const sidebarSpace = (open: boolean) => (open ? `${SIDEBAR_WIDTH + 24}px` : "0px");
@@ -300,14 +420,14 @@ function EditorPage({ project }: EditorPageProps) {
     >
       <Header
         projectName={project}
-        fileName={blocksDoc?.name ?? doc.name}
+        fileName={[blocksDoc?.name ?? doc.name, hasVariants && history.variant].filter(Boolean).join(" · ") || undefined}
         onHome={() => navigate("/")}
         leftOpen={leftOpen}
         rightOpen={rightOpen}
         onToggleLeft={toggleLeft}
         onToggleRight={toggleRight}
         onUpload={() => fileInput.current?.click()}
-        onSave={save}
+        onSave={() => save()}
         onSettings={() => invoke("open_settings_page")}
       />
 
@@ -338,8 +458,20 @@ function EditorPage({ project }: EditorPageProps) {
             </>
           )}
         </dl>
+        <h3 className={styles.sidebarHeading}>Versions</h3>
+        {rightOpen && (
+          <VersionHistory
+            saved={!!versionPath}
+            history={history}
+            previewId={preview?.version.id ?? null}
+            onSaveNamed={(message) => save(message)}
+            onPreview={previewVersion}
+            onCreateVariant={createVariant}
+            onSwitchVariant={switchVariant}
+          />
+        )}
         <h3 className={styles.sidebarHeading}>Text Blocks</h3>
-        {rightOpen && <BlocksPicker project={project} refreshKey={filesVersion} editor={blocksDoc ? null : tiptap} />}
+        {rightOpen && <BlocksPicker project={project} refreshKey={filesVersion} editor={blocksDoc || preview ? null : tiptap} />}
       </Sidebar>
 
       <main className={styles.main}>
@@ -350,7 +482,21 @@ function EditorPage({ project }: EditorPageProps) {
           onChange={handleUpload}
           hidden
         />
-        {blocksDoc && <BlocksEditor key={blocksDoc.path} blocks={blocksDoc.blocks} onChange={changeBlocks} />}
+        {preview && (
+          <div className={styles.previewBar}>
+            <span>
+              Previewing <strong>{preview.version.message || `Version ${preview.version.id}`}</strong>
+            </span>
+            <button onClick={restorePreview}>Restore this version</button>
+            <button onClick={leavePreview}>Back to current</button>
+          </div>
+        )}
+        {blocksDoc && (
+          // A disabled fieldset makes every field in the blocks read-only while previewing.
+          <fieldset className={styles.blocksFrame} disabled={!!preview}>
+            <BlocksEditor key={`${blocksDoc.path}:${preview?.version.id ?? ""}`} blocks={blocksDoc.blocks} onChange={changeBlocks} />
+          </fieldset>
+        )}
         <div hidden={!!blocksDoc}>
           <TabBar tabs={VIEWS} active={view} onSelect={selectView} />
           {/* Kept mounted while hidden so undo history and selection survive tab switches. */}
@@ -363,6 +509,7 @@ function EditorPage({ project }: EditorPageProps) {
               onChange={handleEditorChange}
               onPageStatusChange={setPageStatus}
               onReady={setTiptap}
+              editable={!preview}
             />
           </div>
           {view === "html" && <CodeView language="html" code={formattedHtml} description="editor.getHTML()" />}
