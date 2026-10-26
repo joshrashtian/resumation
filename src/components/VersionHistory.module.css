@@ -28,11 +28,12 @@
   min-width: 0;
 }
 
-/* :global(:root) beats global.css's button fills in every theme. */
 :global(:root) .icon {
   flex: none;
   width: 28px;
+  height: 28px;
   padding: 0;
+  border-radius: 5px;
   font-size: 15px;
 }
 
@@ -44,6 +45,9 @@
   width: 100%;
   padding: 5px 8px;
   font-size: 12.5px;
+display: flex;
+font-family: "DM Mono";
+gap: 7px;
 }
 
 :global(:root) .version {
@@ -53,14 +57,10 @@
   gap: 2px;
   width: 100%;
   padding: 7px 10px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.7);
-  box-shadow: none;
   text-align: left;
   font-size: 12.5px;
   font-weight: 400;
-  line-height: 1.4;
+  line-height: 1.6;
 }
 
 :global(:root) .version:hover,
@@ -68,16 +68,16 @@
   border-color: #396cd8;
 }
 
-/* The version a variant started from, which belongs to another variant. */
 :global(:root) .origin {
   border-style: dashed;
 }
+
 
 .name {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-weight: 500;
+  font-weight: 600;
   overflow-wrap: anywhere;
 }
 
@@ -86,8 +86,9 @@
   border-radius: 4px;
   background-color: rgba(57, 108, 216, 0.15);
   color: #396cd8;
+  font-family: "DM Mono";
   font-size: 10.5px;
-  font-weight: 600;
+  font-weight: 900;
 }
 
 .meta {

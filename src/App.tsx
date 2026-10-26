@@ -4,6 +4,7 @@ import { useSettings } from "./settings";
 import HomePage from "./pages/HomePage";
 import EditorPage from "./pages/EditorPage";
 import SettingsPage from "./components/SettingsPage";
+import { ContextMenuProvider } from "./contexts/ContextMenuContext";
 import "./global.css";
 
 // Keyed by project so switching projects starts a fresh editor.
@@ -23,14 +24,16 @@ function App() {
   }, [settings.transparency]);
 
   return (
-    <HashRouter>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/editor/:project" element={<EditorRoute />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </HashRouter>
+    <ContextMenuProvider>
+      <HashRouter>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/editor/:project" element={<EditorRoute />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </HashRouter>
+    </ContextMenuProvider>
   );
 }
 

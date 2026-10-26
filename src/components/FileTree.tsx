@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { FaChevronDown, FaChevronRight, FaFileWord, FaListUl, FaPencil, FaRegFileLines, FaRegFolder } from "react-icons/fa6";
 import { displayName, isResumationFile } from "../fileTypes";
 import { isBlocksFile } from "../lib/blocks";
+import { useContextMenu } from "../contexts/ContextMenuContext";
 import styles from "./FileTree.module.css";
 
 export type Entry = {
@@ -36,6 +37,7 @@ const FileTree = ({ project, folder, refreshKey, onOpenFile }: FolderProps) => {
   const [entries, setEntries] = useState<Entry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const { createContext } = useContextMenu();
 
   useEffect(() => {
     invoke<Entry[]>("list_documents", { project, folder })
@@ -63,7 +65,15 @@ const FileTree = ({ project, folder, refreshKey, onOpenFile }: FolderProps) => {
         <li key={entry.path}>
           {entry.is_dir ? (
             <>
-              <button title={entry.name} onClick={() => toggle(entry.path)}>
+              <button
+                title={entry.name}
+                onClick={() => toggle(entry.path)}
+                onContextMenu={(e) =>
+                  createContext(e, [
+                    { name: expanded.has(entry.path) ? "Collapse" : "Expand", function: () => toggle(entry.path) },
+                  ])
+                }
+              >
                 {expanded.has(entry.path) ? <FaChevronDown className={styles.chevron} /> : <FaChevronRight className={styles.chevron} />}
                 <FaRegFolder />
                 <span>{entry.name}</span>
@@ -76,6 +86,7 @@ const FileTree = ({ project, folder, refreshKey, onOpenFile }: FolderProps) => {
             <button
               title={fileTitle(entry.name)}
               onClick={() => onOpenFile(entry.path)}
+              onContextMenu={(e) => createContext(e, [{ name: "Open", function: () => onOpenFile(entry.path) }])}
             >
               <span className={styles.chevron} />
               <FileIcon name={entry.name} />

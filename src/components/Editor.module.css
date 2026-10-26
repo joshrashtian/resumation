@@ -11,48 +11,6 @@
   text-align: left;
 }
 
-.toolbar {
-  display: flex;
-  position: sticky;
-  top: 64px;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 8px;
-  z-index: 50;
-  background-color: #f9f9f9;
-  margin: 6px;
-
-  border-radius: 30px;
-}
-
-.toolbar button {
-  padding: 0.3em 0.7em;
-  font-size: 0.875em;
-  box-shadow: none;
-  border: 1px solid #d0d0d0;
-}
-
-.toolbar select {
-  padding: 0.3em 0.5em;
-  font-size: 0.875em;
-  font-family: inherit;
-  border: 1px solid #d0d0d0;
-  border-radius: 8px;
-  background-color: inherit;
-  color: inherit;
-}
-
-.toolbar button.active {
-  background-color: #396cd8;
-  border-color: #396cd8;
-  color: #ffffff;
-}
-
-.toolbar button:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
 /* The editor is the width of the page's text area (page width minus margins)
    so lines wrap like the printed page, and a line marks where each page of
    text ends. Sizes come from the document via CSS variables. */
@@ -103,8 +61,6 @@
   margin: 2pt 0;
 }
 
-/* Text after a right-aligned tab stop, e.g. dates on resume entries.
-   The class comes from the RightTab extension, so it stays global. */
 .content :global(.tiptap .right-tab) {
   float: right;
 }
@@ -121,14 +77,47 @@
     border-color: rgba(255, 255, 255, 0.12);
   }
 
-  .toolbar,
-  .toolbar button,
-  .toolbar select {
-    border-color: rgba(255, 255, 255, 0.12);
+  .dragHandle {
+    color: rgba(255, 255, 255, 0.35);
   }
 
-  /* Beat the solid button background from global.css. */
-  :global(:root[data-transparency="off"]) .toolbar button.active {
-    background-color: #396cd8;
+  .dragHandle:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.8);
   }
+}
+
+/* Sits in the page's left padding, beside the block it moves. */
+.dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 22px;
+  border-radius: 4px;
+  color: rgba(0, 0, 0, 0.35);
+  font-size: 14px;
+  cursor: grab;
+}
+
+/* The handle is placed with an inline left, so a transform is what shifts it. */
+.dragHandle.listItem {
+  transform: translateX(-18px);
+}
+
+.dragHandle:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+
+.content :global(.tiptap .ProseMirror-selectednode) {
+  border-radius: 5px;
+  background-color: rgba(57, 108, 216, 0.1);
+  box-shadow: 0 0 0 3px rgba(57, 108, 216, 0.1);
+  transition: background-color 200ms ease, box-shadow 200ms ease;
 }

@@ -1,33 +1,75 @@
 import { useEffect, useRef, useState } from "react";
-import { EditorContent, JSONContent, useEditor, useEditorState, type Editor as TiptapEditor } from "@tiptap/react";
+import { EditorContent, JSONContent, useEditor, type Editor as TiptapEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Color, FontFamily, FontSize, TextStyle } from "@tiptap/extension-text-style";
 import TextAlign from "@tiptap/extension-text-align";
+import DragHandle from "@tiptap/extension-drag-handle-react";
+import { TextSelection } from "@tiptap/pm/state";
+import type { Node as PMNode } from "@tiptap/pm/model";
 import { ParagraphFormat } from "./extensions/ParagraphFormat";
 import { RightTab } from "./extensions/RightTab";
 import { PageLimit, contentHeight } from "./extensions/PageLimit";
-import { FONTS } from "../fontOptions";
 import { DEFAULT_LAYOUT, PageLayout } from "../pageLayout";
+import EditorToolbar from "./EditorToolbar";
 import styles from "./Editor.module.css";
-import { LuIndentDecrease, LuIndentIncrease } from "react-icons/lu";
-import { FaArrowRotateLeft, FaAlignCenter, FaAlignJustify, FaAlignLeft, FaAlignRight, FaArrowRotateRight, FaBold, FaItalic, FaUnderline } from "react-icons/fa6";
+import { LuGripVertical } from "react-icons/lu";
 
-// Resume sizes are usually given in points (body text 10–12pt).
-const FONT_SIZES = ["8", "9", "10", "10.5", "11", "12", "14", "16", "18", "20", "24", "28", "36"];
+// Where a top-level block's text starts on screen; a list is measured by its
+// first item's text, so bullets count as indented by the list itself.
+function textLeft(editor: TiptapEditor, pos: number): number | null {
+  const dom = editor.view.nodeDOM(pos);
+  if (!(dom instanceof HTMLElement)) return null;
+  const text = dom.matches("ul, ol") ? dom.querySelector("li > *") : dom;
+  return text instanceof HTMLElement ? text.getBoundingClientRect().left : null;
+}
 
-const LINE_SPACINGS = [
-  { label: "Single", value: "1" },
-  { label: "1.15", value: "1.15" },
-  { label: "1.5", value: "1.5" },
-  { label: "Double", value: "2" },
-];
+const SECTION_TITLE = 1; // e.g. "PROGRAMMING PROJECTS"
+const ENTRY_TITLE = 2; // e.g. "MESAMobile, iOS App"
 
-const ALIGNMENTS = [
-  { value: "left", icon: <FaAlignLeft />, title: "Align left" },
-  { value: "center", icon: <FaAlignCenter />, title: "Align center" },
-  { value: "right", icon: <FaAlignRight />, title: "Align right" },
-  { value: "justify", icon: <FaAlignJustify />, title: "Justify" },
-];
+// Resume titles by how they look rather than by heading level: an all-caps
+// line starts a section, and a line whose words are all bold starts an entry.
+// A right-aligned date doesn't count either way.
+function titleRank(node: PMNode): number | null {
+  if (node.type.name === "heading") return SECTION_TITLE;
+  if (node.type.name !== "paragraph") return null;
+  let text = "";
+  let allBold = true;
+  node.descendants((child) => {
+    if (!child.isText || !child.text!.trim() || child.marks.some((m) => m.type.name === "rightTab")) return;
+    text += child.text;
+    if (!child.marks.some((m) => m.type.name === "bold")) allBold = false;
+  });
+  const letters = text.replace(/[^\p{L}]/gu, "");
+  if (letters.length >= 2 && letters === letters.toUpperCase()) return SECTION_TITLE;
+  return text.trim() && allBold ? ENTRY_TITLE : null;
+}
+
+// Selects what dragging a block should move with it: a section title takes
+// everything up to the next section, an entry title everything up to the next
+// entry or section, and any other line the lines indented further under it
+// (e.g. a "Languages" line and its bullets). The drag handle drags a
+// selection that covers the block it's on.
+function selectSection(editor: TiptapEditor, pos: number) {
+  const { doc } = editor.state;
+  const $pos = doc.resolve(pos);
+  const left = textLeft(editor, pos);
+  if ($pos.depth !== 0 || left === null) return;
+  const rank = titleRank(doc.child($pos.index(0)));
+  let end = pos + doc.child($pos.index(0)).nodeSize;
+  for (let i = $pos.index(0) + 1; i < doc.childCount; i++) {
+    const nextRank = titleRank(doc.child(i));
+    if (rank !== null) {
+      if (nextRank !== null && nextRank <= rank) break;
+    } else {
+      const nextLeft = textLeft(editor, end);
+      // A pixel of slack so rounding doesn't make two equal indents differ.
+      if (nextRank !== null || nextLeft === null || nextLeft <= left + 1) break;
+    }
+    end += doc.child(i).nodeSize;
+  }
+  const selection = TextSelection.between(doc.resolve(pos + 1), doc.resolve(end - 1));
+  editor.view.dispatch(editor.state.tr.setSelection(selection));
+}
 
 export type PageStatus = {
   usage: number;
@@ -44,16 +86,22 @@ type EditorProps = {
   onReady?: (editor: TiptapEditor | null) => void;
   // False shows the document read-only, e.g. while previewing an old version.
   editable?: boolean;
+  // Opens the Text Blocks picker; also fired by typing "/" on an empty line.
+  onInsertBlock?: () => void;
 };
 
-function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT, onPageStatusChange, onReady, editable = true }: EditorProps) {
+function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT, onPageStatusChange, onReady, editable = true, onInsertBlock }: EditorProps) {
 
   const textWidth = layout.width - layout.marginLeft - layout.marginRight;
   const textHeight = layout.height - layout.marginTop - layout.marginBottom;
 
+  const onInsertBlockRef = useRef(onInsertBlock);
+  onInsertBlockRef.current = onInsertBlock;
+
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      // Clicking a link edits it rather than leaving the app.
+      StarterKit.configure({ link: { openOnClick: false } }),
       TextStyle,
       FontFamily,
       FontSize,
@@ -64,12 +112,24 @@ function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT
       PageLimit,
     ],
     content,
+    editorProps: {
+      // "/" on an empty line opens Insert block; anywhere else it types a slash.
+      handleKeyDown: (view, event) => {
+        const { $from, empty } = view.state.selection;
+        if (event.key !== "/" || !empty || $from.parent.content.size || !onInsertBlockRef.current || !view.editable) return false;
+        onInsertBlockRef.current();
+        return true;
+      },
+    },
     onCreate: ({ editor }) => onChange?.(editor.getHTML(), editor.getJSON()),
     onUpdate: ({ editor }) => onChange?.(editor.getHTML(), editor.getJSON()),
   });
 
   const [pageUsage, setPageUsage] = useState(0);
   const [limitHit, setLimitHit] = useState(false);
+  // A list item's bullet sits outside its box, so the handle moves further out to clear it.
+  const [handleOnListItem, setHandleOnListItem] = useState(false);
+  const handlePos = useRef<number | null>(null);
 
   useEffect(() => {
     const maxHeight = pageLimit ? pageLimit * textHeight * 96 : null;
@@ -115,28 +175,6 @@ function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT
     onPageStatusChangeRef.current?.({ usage: pageUsage, limitHit });
   }, [pageUsage, limitHit]);
 
-  const state = useEditorState({
-    editor,
-    selector: ({ editor }) => ({
-      fontFamily: (editor.getAttributes("textStyle").fontFamily as string | undefined) ?? "",
-      fontSize: ((editor.getAttributes("textStyle").fontSize as string | undefined) ?? "").replace("pt", ""),
-      lineSpacing:
-        (editor.getAttributes("paragraph").lineSpacing as string | null) ??
-        (editor.getAttributes("heading").lineSpacing as string | null) ??
-        "",
-      align: ALIGNMENTS.find((a) => editor.isActive({ textAlign: a.value }))?.value ?? "left",
-      bold: editor.isActive("bold"),
-      italic: editor.isActive("italic"),
-      underline: editor.isActive("underline"),
-      h1: editor.isActive("heading", { level: 1 }),
-      h2: editor.isActive("heading", { level: 2 }),
-      bulletList: editor.isActive("bulletList"),
-      orderedList: editor.isActive("orderedList"),
-      canUndo: editor.can().undo(),
-      canRedo: editor.can().redo(),
-    }),
-  });
-
   return (
     <div
       className={pageLimit ? `${styles.editor} ${styles.limited}` : styles.editor}
@@ -150,105 +188,30 @@ function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT
         } as React.CSSProperties
       }
     >
-      <div className={styles.toolbar}>
-        <select
-          value={state.fontFamily}
-          onChange={(e) => {
-            const font = e.target.value;
-            if (font) editor.chain().focus().setFontFamily(font).run();
-            else editor.chain().focus().unsetFontFamily().run();
+      <EditorToolbar
+        editor={editor}
+        defaultFont={layout.fontFamily}
+        defaultSize={layout.fontSize}
+        onInsertBlock={editable ? onInsertBlock : undefined}
+      />
+
+      {editable && (
+        <DragHandle
+          editor={editor}
+          nested={{ edgeDetection: "none" }}
+          className={handleOnListItem ? `${styles.dragHandle} ${styles.listItem}` : styles.dragHandle}
+          onNodeChange={({ node, pos }) => {
+            handlePos.current = node ? pos : null;
+            setHandleOnListItem(node?.type.name === "listItem");
           }}
+          onElementDragStart={() => handlePos.current !== null && selectSection(editor, handlePos.current)}
+          // A drop leaves the moved blocks selected, and grabbing any block
+          // inside a selection drags all of it, so clear it once the drag ends.
+          onElementDragEnd={() => setTimeout(() => editor.commands.setTextSelection(editor.state.selection.to))}
         >
-          <option value="">Default font</option>
-          {state.fontFamily && !FONTS.some((f) => f.value === state.fontFamily) && (
-            <option value={state.fontFamily}>{state.fontFamily.split(",")[0].replace(/'/g, "")}</option>
-          )}
-          {FONTS.map((font) => (
-            <option key={font.label} value={font.value} style={{ fontFamily: font.value }}>
-              {font.label}
-            </option>
-          ))}
-        </select>
-        <select
-          title="Font size"
-          value={state.fontSize}
-          onChange={(e) => {
-            const size = e.target.value;
-            if (size) editor.chain().focus().setFontSize(`${size}pt`).run();
-            else editor.chain().focus().unsetFontSize().run();
-          }}
-        >
-          <option value="">Size</option>
-          {state.fontSize && !FONT_SIZES.includes(state.fontSize) && <option value={state.fontSize}>{state.fontSize}</option>}
-          {FONT_SIZES.map((size) => (
-            <option key={size} value={size}>
-              {size}
-            </option>
-          ))}
-        </select>
-        <select
-          title="Line spacing"
-          value={state.lineSpacing}
-          onChange={(e) => {
-            const spacing = e.target.value;
-            if (spacing) editor.chain().focus().setLineSpacing(spacing).run();
-            else editor.chain().focus().unsetLineSpacing().run();
-          }}
-        >
-          <option value="">Spacing</option>
-          {state.lineSpacing && !LINE_SPACINGS.some((s) => s.value === state.lineSpacing) && (
-            <option value={state.lineSpacing}>{state.lineSpacing}</option>
-          )}
-          {LINE_SPACINGS.map((spacing) => (
-            <option key={spacing.value} value={spacing.value}>
-              {spacing.label}
-            </option>
-          ))}
-        </select>
-        {ALIGNMENTS.map((alignment) => (
-          <button
-            key={alignment.value}
-            title={alignment.title}
-            className={state.align === alignment.value ? styles.active : ""}
-            onClick={() => editor.chain().focus().setTextAlign(alignment.value).run()}
-          >
-            {alignment.icon}
-          </button>
-        ))}
-        <button className={state.bold ? styles.active : ""} onClick={() => editor.chain().focus().toggleBold().run()}>
-          <FaBold />
-        </button>
-        <button className={state.italic ? styles.active : ""} onClick={() => editor.chain().focus().toggleItalic().run()}>
-          <FaItalic />
-        </button>
-        <button className={state.underline ? styles.active : ""} onClick={() => editor.chain().focus().toggleUnderline().run()}>
-          <FaUnderline/>
-        </button>
-        <button className={state.h1 ? styles.active : ""} onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>
-          h1
-        </button>
-        <button className={state.h2 ? styles.active : ""} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
-          H2
-        </button>
-        <button className={state.bulletList ? styles.active : ""} onClick={() => editor.chain().focus().toggleBulletList().run()}>
-          • List
-        </button>
-        <button className={state.orderedList ? styles.active : ""} onClick={() => editor.chain().focus().toggleOrderedList().run()}>
-          1. List
-        </button>
-        <button title="Decrease indent (⇧Tab)" onClick={() => editor.chain().focus().outdent().run()}>
-          <LuIndentDecrease />
-        </button>
-        <button title="Increase indent (Tab)" onClick={() => editor.chain().focus().indent().run()}>
-          <LuIndentIncrease />
-        </button>
-        <button disabled={!state.canUndo} onClick={() => editor.chain().focus().undo().run()}>
-          <FaArrowRotateLeft />
-        </button>
-        <button disabled={!state.canRedo} onClick={() => editor.chain().focus().redo().run()}>
-          <FaArrowRotateRight />
-        </button>
-      </div>
+          <LuGripVertical />
+        </DragHandle>
+      )}
       <EditorContent editor={editor} className={styles.content} />
     </div>
   );

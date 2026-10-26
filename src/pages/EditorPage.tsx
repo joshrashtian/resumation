@@ -97,6 +97,13 @@ function EditorPage({ project }: EditorPageProps) {
   const [pageStatus, setPageStatus] = useState<PageStatus>({ usage: 0, limitHit: false });
   const [leftOpen, toggleLeft] = useStoredToggle("resumation.sidebar.left", true);
   const [rightOpen, toggleRight] = useStoredToggle("resumation.sidebar.right", false);
+  const blocksHeading = useRef<HTMLHeadingElement>(null);
+
+  // Opens the Details sidebar on its Text Blocks list.
+  function showBlocksPicker() {
+    if (!rightOpen) toggleRight();
+    setTimeout(() => blocksHeading.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
   const [filesVersion, setFilesVersion] = useState(0);
   const [view, setView] = useState<View>("document");
   const [preview, setPreview] = useState<Preview | null>(null);
@@ -470,7 +477,7 @@ function EditorPage({ project }: EditorPageProps) {
             onSwitchVariant={switchVariant}
           />
         )}
-        <h3 className={styles.sidebarHeading}>Text Blocks</h3>
+        <h3 className={styles.sidebarHeading} ref={blocksHeading}>Text Blocks</h3>
         {rightOpen && <BlocksPicker project={project} refreshKey={filesVersion} editor={blocksDoc || preview ? null : tiptap} />}
       </Sidebar>
 
@@ -510,6 +517,7 @@ function EditorPage({ project }: EditorPageProps) {
               onPageStatusChange={setPageStatus}
               onReady={setTiptap}
               editable={!preview}
+              onInsertBlock={showBlocksPicker}
             />
           </div>
           {view === "html" && <CodeView language="html" code={formattedHtml} description="editor.getHTML()" />}

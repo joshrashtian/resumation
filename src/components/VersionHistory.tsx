@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { LuPlus } from "react-icons/lu";
+import { LuPlus, LuSave } from "react-icons/lu";
 import NewFileInput from "./NewFileInput";
 import styles from "./VersionHistory.module.css";
 
-// Mirror version_control::Version and History in src-tauri.
 export type Version = {
   id: number;
   parent: number | null;
@@ -14,9 +13,8 @@ export type Version = {
 };
 
 export type History = {
-  // The variant the file on disk belongs to.
+
   variant: string;
-  // Each variant's current version.
   heads: Record<string, number>;
   versions: Version[];
 };
@@ -33,7 +31,6 @@ function when(time: number) {
 }
 
 type VersionHistoryProps = {
-  // False while the open document hasn't been saved yet.
   saved: boolean;
   history: History;
   previewId: number | null;
@@ -101,7 +98,7 @@ const VersionHistory = ({ saved, history, previewId, onSaveNamed, onPreview, onC
         />
       ) : (
         <button className={styles.save} onClick={() => setNaming("version")}>
-          Save version…
+        <LuSave />  Save New Version
         </button>
       )}
 
