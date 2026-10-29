@@ -10,7 +10,8 @@
     gap: 6px;
     padding: 5px 8px;
     border: none;
-    border-radius: 8px;
+    box-shadow: none;
+    border-radius: none;
     background: transparent;
     color: inherit;
     font: inherit;
@@ -22,7 +23,6 @@
     flex-shrink: 0;
 }
 
-/* Resumation's own files (editor files, text blocks) show an accent icon instead of an extension. */
 .resumation {
     color: #396cd8;
 }
@@ -30,7 +30,7 @@
 .tree li button span:not(.chevron) {
     overflow: hidden;
     text-overflow: ellipsis;
-    font-family: "DM Mono", monospace;
+
 }
 
 .chevron {
@@ -45,7 +45,7 @@
 }
 
 .tree li button:hover {
-    background-color: rgba(0, 0, 0, 0.06);
+    background-color: rgba(0, 0, 240, 0.06);
 }
 
 .empty {
@@ -59,10 +59,10 @@
 
 @media (prefers-color-scheme: dark) {
     .tree li button:hover {
-        background-color: rgba(100, 100, 255, 0.08);
+        background-color: rgba(100, 200, 255, 0.08);
     }
 
-    /* Keep tree rows clear of the solid button background. */
+  
     :global(:root[data-transparency="off"]) .tree li button {
         background-color: transparent;
     }

@@ -1,4 +1,4 @@
-.toolbar {
+:root {
   --tb-bg: #f6f6f7;
   --tb-control: #ffffff;
   --tb-border: rgba(0, 0, 0, 0.12);
@@ -10,6 +10,13 @@
   --tb-accent-fg: #2a56b8;
   --tb-muted: rgba(0, 0, 0, 0.5);
   --tb-popover: #ffffff;
+  --tb-glass: rgba(246, 246, 246, 0.45);
+  --tb-glass-border: rgba(0, 0, 0, 0.12);
+  --tb-glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.toolbar {
+
 
   display: flex;
   position: sticky;
@@ -19,9 +26,39 @@
   align-items: center;
   gap: 6px;
   padding: 10px 12px;
-  background-color: var(--tb-bg);
-  border-bottom: 1px solid var(--tb-border);
-  border-radius: 8px 8px 0 0;
+ 
+
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  animation: round linear both;
+  animation-timeline: scroll(root block);
+  animation-range: 0 300px;
+}
+
+
+@keyframes round {
+  from {
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+    border-bottom: 1px solid var(--tb-border);
+    scale: 1;
+    background-color: var(--tb-bg);
+    -webkit-backdrop-filter: blur(0px) saturate(100%);
+    backdrop-filter: blur(0px) saturate(100%);
+    box-shadow: 0 0 0 transparent;
+  }
+
+  /* Scrolled: frosted glass floating over the page. */
+  to {
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+    border-bottom: 1px solid var(--tb-glass-border);
+    background-color: var(--tb-glass);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    backdrop-filter: blur(20px) saturate(160%);
+    box-shadow: var(--tb-glass-shadow);
+    scale: 1.03;
+  }
 }
 
 .toolbar button {
@@ -80,30 +117,6 @@
   border-left: 2px;
   border-color: var(--tb-border);
   border-style: dotted;
-}
-
-.toolbar button.insert {
-  padding: 0 8px 0 14px;
-  background-color: var(--tb-accent-bg);
-  border-color: var(--tb-accent-border);
-  color: var(--tb-accent-fg);
-}
-
-.toolbar button.insert:hover {
-  background-color: var(--tb-active-bg);
-}
-
-.insert kbd {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 22px;
-  margin-left: 4px;
-  border: 1px solid var(--tb-accent-border);
-  border-radius: 2px;
-  font-family: inherit;
-  font-size: 12px;
 }
 
 /* Popovers */
@@ -208,6 +221,11 @@
   color: var(--tb-accent-fg);
 }
 
+/* Transparency off: the scrolled toolbar goes solid instead of glass. */
+:global(:root[data-transparency="off"]) .toolbar {
+  --tb-glass: var(--solid-panel);
+}
+
 @media (prefers-color-scheme: dark) {
   .toolbar {
     --tb-bg: #1b1b1c;
@@ -221,6 +239,9 @@
     --tb-accent-fg: #d6e0fa;
     --tb-muted: rgba(255, 255, 255, 0.5);
     --tb-popover: #232325;
+    --tb-glass: rgba(40, 40, 42, 0.5);
+    --tb-glass-border: rgba(255, 255, 255, 0.1);
+    --tb-glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     color-scheme: dark;
   }
 
@@ -229,17 +250,20 @@
   :global(:root[data-transparency="off"]) .toolbar button:hover {
     background-color: transparent;
   }
-  :global(:root[data-transparency="off"]) .toolbar button:hover:not(.select, .insert) {
+
+  :global(:root[data-transparency="off"]) .toolbar button:hover:not(.select) {
     background-color: var(--tb-hover);
   }
+
   :global(:root[data-transparency="off"]) .toolbar button.active {
     background-color: var(--tb-active-bg);
   }
+
   :global(:root[data-transparency="off"]) .toolbar button.select,
   :global(:root[data-transparency="off"]) .linkForm input {
     background-color: var(--tb-control);
   }
-  :global(:root[data-transparency="off"]) .toolbar button.insert,
+
   :global(:root[data-transparency="off"]) .linkForm button {
     background-color: var(--tb-accent-bg);
   }

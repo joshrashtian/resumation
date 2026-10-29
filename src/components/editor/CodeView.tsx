@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import MonacoEditor, { BeforeMount } from "@monaco-editor/react";
 import { FaCheck, FaCopy } from "react-icons/fa6";
-import "../monaco";
+import "../../lib/monaco";
 import styles from "./CodeView.module.css";
 
 type CodeViewProps = {

@@ -3,7 +3,7 @@
 /* DM Sans is a variable font, so one file covers every weight. */
 @font-face {
   font-family: "DM Sans";
-  src: url("./assets/DM_Sans/DMSans-VariableFont_opsz,wght.ttf") format("truetype");
+  src: url("../assets/fonts/DM_Sans/DMSans-VariableFont_opsz,wght.ttf") format("truetype");
   font-weight: 100 1000;
   font-style: normal;
   font-display: swap;
@@ -11,7 +11,7 @@
 
 @font-face {
   font-family: "DM Sans";
-  src: url("./assets/DM_Sans/DMSans-Italic-VariableFont_opsz,wght.ttf") format("truetype");
+  src: url("../assets/fonts/DM_Sans/DMSans-Italic-VariableFont_opsz,wght.ttf") format("truetype");
   font-weight: 100 1000;
   font-style: italic;
   font-display: swap;
@@ -19,7 +19,7 @@
 
 @font-face {
   font-family: "Londrina Sketch";
-  src: url("./assets/Londrina_Sketch/LondrinaSketch-Regular.ttf") format("truetype");
+  src: url("../assets/fonts/Londrina_Sketch/LondrinaSketch-Regular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -28,7 +28,7 @@
 /* DM Mono ships as static files, one per weight/style. */
 @font-face {
   font-family: "DM Mono";
-  src: url("./assets/DM_Mono/DMMono-Light.ttf") format("truetype");
+  src: url("../assets/fonts/DM_Mono/DMMono-Light.ttf") format("truetype");
   font-weight: 300;
   font-style: normal;
   font-display: swap;
@@ -36,7 +36,7 @@
 
 @font-face {
   font-family: "DM Mono";
-  src: url("./assets/DM_Mono/DMMono-LightItalic.ttf") format("truetype");
+  src: url("../assets/fonts/DM_Mono/DMMono-LightItalic.ttf") format("truetype");
   font-weight: 300;
   font-style: italic;
   font-display: swap;
@@ -44,7 +44,7 @@
 
 @font-face {
   font-family: "DM Mono";
-  src: url("./assets/DM_Mono/DMMono-Regular.ttf") format("truetype");
+  src: url("../assets/fonts/DM_Mono/DMMono-Regular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -52,7 +52,7 @@
 
 @font-face {
   font-family: "DM Mono";
-  src: url("./assets/DM_Mono/DMMono-Italic.ttf") format("truetype");
+  src: url("../assets/fonts/DM_Mono/DMMono-Italic.ttf") format("truetype");
   font-weight: 400;
   font-style: italic;
   font-display: swap;
@@ -60,7 +60,7 @@
 
 @font-face {
   font-family: "DM Mono";
-  src: url("./assets/DM_Mono/DMMono-Medium.ttf") format("truetype");
+  src: url("../assets/fonts/DM_Mono/DMMono-Medium.ttf") format("truetype");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -68,7 +68,7 @@
 
 @font-face {
   font-family: "DM Mono";
-  src: url("./assets/DM_Mono/DMMono-MediumItalic.ttf") format("truetype");
+  src: url("../assets/fonts/DM_Mono/DMMono-MediumItalic.ttf") format("truetype");
   font-weight: 500;
   font-style: italic;
   font-display: swap;

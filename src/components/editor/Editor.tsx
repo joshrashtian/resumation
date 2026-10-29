@@ -9,7 +9,7 @@ import type { Node as PMNode } from "@tiptap/pm/model";
 import { ParagraphFormat } from "./extensions/ParagraphFormat";
 import { RightTab } from "./extensions/RightTab";
 import { PageLimit, contentHeight } from "./extensions/PageLimit";
-import { DEFAULT_LAYOUT, PageLayout } from "../pageLayout";
+import { DEFAULT_LAYOUT, PageLayout } from "../../lib/pageLayout";
 import EditorToolbar from "./EditorToolbar";
 import styles from "./Editor.module.css";
 import { LuGripVertical } from "react-icons/lu";
@@ -71,6 +71,8 @@ function selectSection(editor: TiptapEditor, pos: number) {
   editor.view.dispatch(editor.state.tr.setSelection(selection));
 }
 
+const lineCount = (n: number) => `${n} line${n === 1 ? "" : "s"}`;
+
 export type PageStatus = {
   usage: number;
   limitHit: boolean;
@@ -94,6 +96,7 @@ function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT
 
   const textWidth = layout.width - layout.marginLeft - layout.marginRight;
   const textHeight = layout.height - layout.marginTop - layout.marginBottom;
+  const limitHeight = pageLimit * textHeight * 96;
 
   const onInsertBlockRef = useRef(onInsertBlock);
   onInsertBlockRef.current = onInsertBlock;
@@ -127,12 +130,17 @@ function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT
 
   const [pageUsage, setPageUsage] = useState(0);
   const [limitHit, setLimitHit] = useState(false);
+  // Content height, and the average height a line of text takes with its
+  // spacing, in px, for the sheet's page-end notes.
+  const [usedHeight, setUsedHeight] = useState(0);
+  const [linePitch, setLinePitch] = useState(0);
+  const lineProbe = useRef<HTMLSpanElement>(null);
   // A list item's bullet sits outside its box, so the handle moves further out to clear it.
   const [handleOnListItem, setHandleOnListItem] = useState(false);
   const handlePos = useRef<number | null>(null);
 
   useEffect(() => {
-    const maxHeight = pageLimit ? pageLimit * textHeight * 96 : null;
+    const maxHeight = pageLimit ? limitHeight : null;
     const storage = editor.storage.pageLimit;
     storage.maxHeight = maxHeight;
 
@@ -145,7 +153,19 @@ function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT
 
     const measure = () => {
       const dom = editor.view.dom;
-      setPageUsage(maxHeight && dom.isConnected ? contentHeight(dom) / maxHeight : 0);
+      const height = dom.isConnected ? contentHeight(dom) : 0;
+      setUsedHeight(height);
+      // Paragraph spacing counts too, so divide the content height by the
+      // number of rendered lines rather than by a bare line height.
+      const lineHeight = lineProbe.current?.offsetHeight ?? 0;
+      let lines = 0;
+      if (lineHeight) {
+        dom.querySelectorAll<HTMLElement>("p, h1, h2, h3, h4, h5, h6").forEach((el) => {
+          lines += Math.max(1, Math.round(el.offsetHeight / lineHeight));
+        });
+      }
+      setLinePitch(lines ? height / lines : lineHeight);
+      setPageUsage(maxHeight ? height / maxHeight : 0);
     };
     measure();
     document.fonts.ready.then(measure);
@@ -156,7 +176,7 @@ function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT
       storage.maxHeight = null;
       storage.onBlocked = undefined;
     };
-  }, [editor, pageLimit, textHeight]);
+  }, [editor, pageLimit, limitHeight, layout.fontFamily, layout.fontSize]);
 
   useEffect(() => {
     editor.setEditable(editable);
@@ -175,6 +195,13 @@ function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT
     onPageStatusChangeRef.current?.({ usage: pageUsage, limitHit });
   }, [pageUsage, limitHit]);
 
+  // Where the last allowed page and the content end, in px from the top of the sheet.
+  const pageEnd = layout.marginTop * 96 + limitHeight;
+  const contentEnd = layout.marginTop * 96 + usedHeight;
+  const over = pageLimit > 0 && usedHeight > limitHeight + 1;
+  const linesOver = linePitch ? Math.max(1, Math.round((contentEnd - pageEnd) / linePitch)) : 0;
+  const linesLeft = linePitch ? Math.floor((pageEnd - contentEnd) / linePitch) : 0;
+
   return (
     <div
       className={pageLimit ? `${styles.editor} ${styles.limited}` : styles.editor}
@@ -183,36 +210,74 @@ function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT
           "--pages": pageLimit,
           "--page-text-width": `${textWidth}in`,
           "--page-text-height": `${textHeight}in`,
+          "--margin-top": `${layout.marginTop}in`,
+          "--margin-right": `${layout.marginRight}in`,
+          "--margin-bottom": `${layout.marginBottom}in`,
+          "--margin-left": `${layout.marginLeft}in`,
           "--doc-font-family": layout.fontFamily,
           "--doc-font-size": layout.fontSize,
         } as React.CSSProperties
       }
     >
-      <EditorToolbar
-        editor={editor}
-        defaultFont={layout.fontFamily}
-        defaultSize={layout.fontSize}
-        onInsertBlock={editable ? onInsertBlock : undefined}
-      />
-
-      {editable && (
-        <DragHandle
+      <div className={styles.page}>
+        <EditorToolbar
           editor={editor}
-          nested={{ edgeDetection: "none" }}
-          className={handleOnListItem ? `${styles.dragHandle} ${styles.listItem}` : styles.dragHandle}
-          onNodeChange={({ node, pos }) => {
-            handlePos.current = node ? pos : null;
-            setHandleOnListItem(node?.type.name === "listItem");
-          }}
-          onElementDragStart={() => handlePos.current !== null && selectSection(editor, handlePos.current)}
-          // A drop leaves the moved blocks selected, and grabbing any block
-          // inside a selection drags all of it, so clear it once the drag ends.
-          onElementDragEnd={() => setTimeout(() => editor.commands.setTextSelection(editor.state.selection.to))}
-        >
-          <LuGripVertical />
-        </DragHandle>
-      )}
-      <EditorContent editor={editor} className={styles.content} />
+          defaultFont={layout.fontFamily}
+          defaultSize={layout.fontSize}
+        />
+
+        {editable && (
+          <DragHandle
+            editor={editor}
+            nested={{ edgeDetection: "none" }}
+            className={handleOnListItem ? `${styles.dragHandle} ${styles.listItem}` : styles.dragHandle}
+            onNodeChange={({ node, pos }) => {
+              handlePos.current = node ? pos : null;
+              setHandleOnListItem(node?.type.name === "listItem");
+            }}
+            onElementDragStart={() => handlePos.current !== null && selectSection(editor, handlePos.current)}
+            // A drop leaves the moved blocks selected, and grabbing any block
+            // inside a selection drags all of it, so clear it once the drag ends.
+            onElementDragEnd={() => setTimeout(() => editor.commands.setTextSelection(editor.state.selection.to))}
+          >
+            <LuGripVertical />
+          </DragHandle>
+        )}
+        <div className={styles.sheet}>
+          <div className={styles.guides} aria-hidden />
+          {over && <div className={styles.overflow} style={{ top: pageEnd }} aria-hidden />}
+          <EditorContent editor={editor} className={styles.content} />
+          <span ref={lineProbe} className={styles.lineProbe} aria-hidden>
+            X
+          </span>
+
+          {/* The footer says the same in words; these show where on the page. */}
+          {pageLimit > 0 && linePitch > 0 && (
+            <div className={styles.notes} aria-hidden>
+              {over ? (
+                <>
+                  <div className={`${styles.bracket} ${styles.over}`} style={{ top: pageEnd, height: contentEnd - pageEnd }} />
+                  <div className={styles.note} style={{ top: pageEnd }}>
+                    <span className={styles.tick} />
+                    Page {pageLimit} ends
+                  </div>
+                  {/* Kept clear of "Page N ends" when only a line or two spill over. */}
+                  <div className={`${styles.note} ${styles.strong}`} style={{ top: Math.max((pageEnd + contentEnd) / 2, pageEnd + 24) }}>
+                    {lineCount(linesOver)} over
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className={styles.bracket} style={{ top: contentEnd, height: pageEnd - contentEnd }} />
+                  <div className={styles.note} style={{ top: (contentEnd + pageEnd) / 2 }}>
+                    {linesLeft > 0 ? `≈ ${lineCount(linesLeft)} left` : "Page full"}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

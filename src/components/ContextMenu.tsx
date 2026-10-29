@@ -65,8 +65,9 @@ const ContextMenu = ({ x, y, buttons, onClose }: Props) => {
               button.function();
             }}
           >
+          {button.icon && <span className={styles.icon}>{button.icon}</span>}
             <span>{button.name}</span>
-            {button.icon && <span className={styles.icon}>{button.icon}</span>}
+            
           </button>
         </li>
       ))}

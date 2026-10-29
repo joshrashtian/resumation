@@ -1,6 +1,6 @@
 import type { JSONContent } from "@tiptap/react";
 import { PageLayout } from "./pageLayout";
-import { BLOCKS_EXTENSION } from "./lib/blocks/types";
+import { BLOCKS_EXTENSION } from "./blocks/types";
 
 // Resumation's own file types are JSON inside, but have their own extension,
 // which the UI hides and marks with an icon instead. Text Blocks (.blocks)

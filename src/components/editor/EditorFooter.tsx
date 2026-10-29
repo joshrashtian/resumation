@@ -1,5 +1,5 @@
 import type { PageStatus } from "./Editor";
-import styles from "./Footer.module.css";
+import styles from "./EditorFooter.module.css";
 
 type EditorFooterProps = {
   pageLimit: number;

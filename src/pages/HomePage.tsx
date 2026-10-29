@@ -1,4 +1,4 @@
-import ProjectPicker from "../components/ProjectPicker";
+import ProjectPicker from "../components/files/ProjectPicker";
 import styles from "./HomePage.module.css";
 
 function HomePage() {

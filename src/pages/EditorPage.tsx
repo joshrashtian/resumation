@@ -2,12 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Editor as TiptapEditor, JSONContent } from "@tiptap/react";
 import { invoke } from "@tauri-apps/api/core";
 import { useNavigate } from "react-router";
-import Editor, { PageStatus } from "../components/Editor";
-import { docxToHtml } from "../converter";
-import { useSettings } from "../settings";
-import { DEFAULT_LAYOUT, PageLayout } from "../pageLayout";
-import { formatHtml } from "../codeFormat";
-import { displayName, isResumationFile, RESUMATION_EXTENSION, ResumationFile } from "../fileTypes";
+import Editor, { PageStatus } from "../components/editor/Editor";
+import { docxToHtml } from "../lib/converter";
+import { useSettings } from "../lib/settings";
+import { DEFAULT_LAYOUT, PageLayout } from "../lib/pageLayout";
+import { formatHtml } from "../lib/codeFormat";
+import { displayName, isResumationFile, RESUMATION_EXTENSION, ResumationFile } from "../lib/fileTypes";
 import {
   Block,
   BLOCKS_EXTENSION,
@@ -19,14 +19,14 @@ import {
   normalizeBlocks,
 } from "../lib/blocks";
 import styles from "./EditorPage.module.css";
-import EditorFooter from "../components/EditorFooter";
-import Header from "../components/Header";
-import Sidebar from "../components/Sidebar";
-import FileTree from "../components/FileTree";
-import TabBar, { TabItem } from "../components/TabBar";
-import CodeView from "../components/CodeView";
-import NewFileInput from "../components/NewFileInput";
-import VersionHistory, { EMPTY_HISTORY, History, Version } from "../components/VersionHistory";
+import EditorFooter from "../components/editor/EditorFooter";
+import Header from "../components/layout/Header";
+import Sidebar from "../components/layout/Sidebar";
+import FileTree from "../components/files/FileTree";
+import TabBar, { TabItem } from "../components/layout/TabBar";
+import CodeView from "../components/editor/CodeView";
+import NewFileInput from "../components/files/NewFileInput";
+import VersionHistory, { EMPTY_HISTORY, History, Version } from "../components/files/VersionHistory";
 import { LuBraces, LuCode, LuFileText, LuPlus } from "react-icons/lu";
 
 const SIDEBAR_WIDTH = 240;
@@ -329,6 +329,14 @@ function EditorPage({ project }: EditorPageProps) {
     }
   }
 
+  // Closes the deleted file if it's open, so nothing saves it back.
+  function handleDeleted(path: string) {
+    if (blocksDoc?.path === path) setBlocksDoc(null);
+    if (preview?.path === path) setPreview(null);
+    if (doc.savePath === path) setDoc((prev) => ({ key: prev.key + 1, content: "" }));
+    setFilesVersion((v) => v + 1);
+  }
+
   // The file the version history belongs to; documents only get one once saved.
   const versionPath = blocksDoc?.path ?? doc.savePath ?? null;
 
@@ -451,7 +459,7 @@ function EditorPage({ project }: EditorPageProps) {
         {creatingFile && (
           <NewFileInput placeholder="Text Blocks name" onSubmit={createBlocksFile} onCancel={() => setCreatingFile(false)} />
         )}
-        {leftOpen && <FileTree project={project} refreshKey={filesVersion} onOpenFile={openDocument} />}
+        {leftOpen && <FileTree project={project} refreshKey={filesVersion} onOpenFile={openDocument} onDeleted={handleDeleted} />}
       </Sidebar>
 
       <Sidebar side="right" open={rightOpen} title="Details">

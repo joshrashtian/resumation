@@ -1,10 +1,10 @@
-import React, { createContext } from 'react'
+import { createContext } from 'react'
 
-type DocumentContext {
+type DocumentContext = {
   doc: any;
 }
 
-const DocumentContext=createContext({})
+export const DocumentContext = createContext<DocumentContext | null>(null)
 
 const DocumentContextProvider = () => {
   return (

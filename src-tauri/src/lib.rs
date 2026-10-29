@@ -6,10 +6,6 @@ use tauri::Manager;
 #[cfg(target_os = "macos")]
 use window_vibrancy::{LiquidGlassOptions, NSGlassEffectViewStyle, apply_liquid_glass};
 
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -41,12 +37,13 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            greet,
+         
             settings::open_settings_page,
             directory::read_document,
             directory::read_document_bytes,
             directory::save_document,
             directory::create_document,
+            directory::delete_document,
             directory::list_documents,
             directory::list_projects,
             directory::create_project,

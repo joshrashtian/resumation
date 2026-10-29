@@ -129,6 +129,16 @@ pub fn save_document(app: AppHandle, project: String, name: String, contents: St
     fs::write(safe_path(&app, &project, &name)?, contents).map_err(|e| e.to_string())
 }
 
+// Deletes a single file from the project; folders are refused.
+#[tauri::command]
+pub fn delete_document(app: AppHandle, project: String, name: String) -> Result<(), String> {
+    let path = safe_path(&app, &project, &name)?;
+    if path.is_dir() {
+        return Err("can't delete a folder".into());
+    }
+    fs::remove_file(path).map_err(|e| e.to_string())
+}
+
 // "Resume.docx" -> "Resume (2).docx" while that name is taken in dir.
 fn unique_name(dir: &Path, name: &str) -> String {
     if !dir.join(name).exists() {

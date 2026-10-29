@@ -1,0 +1,230 @@
+/* The paper stays white in both themes: the page is a print preview, not chrome. */
+.editor {
+  --paper: #ffffff;
+  --paper-ink: #1a1a1a;
+  --paper-rule: #d9d9de;
+  --paper-danger: #c62f2f;
+  --paper-overflow: rgba(217, 58, 58, 0.08);
+  --paper-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
+  /* Gutter notes beside the sheet are chrome, so they follow the theme. */
+  --note: rgba(0, 0, 0, 0.55);
+  --note-strong: rgba(0, 0, 0, 0.85);
+  --note-subtle: rgba(0, 0, 0, 0.22);
+  --note-danger: #d93a3a;
+  --page-break: var(--paper-rule);
+  container: editor / inline-size;
+  margin: 2rem 0 48px;
+  text-align: left;
+}
+
+/* The toolbar sits on top of the sheet; together they're one card, centred. */
+.page {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  border-radius: 8px;
+  box-shadow: var(--paper-shadow);
+}
+
+.sheet {
+  /* Real margins when there's room, shrinking toward 24px in a narrow window
+     so the text column, and with it line wrapping, never changes. */
+  --pad-left: clamp(24px, (100cqw - var(--page-text-width)) / 2, var(--margin-left));
+  --pad-right: clamp(24px, (100cqw - var(--page-text-width)) / 2, var(--margin-right));
+  position: relative;
+  border-radius: 0 0 8px 8px;
+  background-color: var(--paper);
+  color: var(--paper-ink);
+}
+
+.content :global(.tiptap) {
+  position: relative;
+  box-sizing: content-box;
+  width: var(--page-text-width);
+  min-height: 300px;
+  margin: 0 auto;
+  padding: var(--margin-top) var(--pad-right) var(--margin-bottom) var(--pad-left);
+  outline: none;
+  font-family: var(--doc-font-family, inherit);
+  font-size: var(--doc-font-size, 11pt);
+  line-height: normal; /* matches Word's single spacing */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--page-text-height) - 1px),
+    var(--page-break) calc(var(--page-text-height) - 1px),
+    var(--page-break) var(--page-text-height)
+  );
+  background-origin: content-box;
+  background-clip: content-box;
+}
+
+/* With a page limit, show the full allowed area. */
+.editor.limited .content :global(.tiptap) {
+  min-height: calc(var(--pages) * var(--page-text-height));
+}
+
+/* Margin guides, shown only while typing on the page. */
+.guides {
+  position: absolute;
+  top: var(--margin-top);
+  right: var(--pad-right);
+  bottom: var(--margin-bottom);
+  left: var(--pad-left);
+  border: 1px solid var(--paper-rule);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.editor.limited .guides {
+  bottom: auto;
+  height: calc(var(--pages) * var(--page-text-height));
+}
+
+.sheet:focus-within .guides {
+  opacity: 1;
+}
+
+/* Past the page limit: a dashed line where the last page ends and a tint
+   under everything after it. Both sit below the text. */
+.overflow {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-top: 1px dashed var(--paper-danger);
+  border-radius: 0 0 8px 8px;
+  background-color: var(--paper-overflow);
+  pointer-events: none;
+}
+
+/* One line of body text, measured to turn heights into lines. */
+.lineProbe {
+  position: absolute;
+  visibility: hidden;
+  font-family: var(--doc-font-family, inherit);
+  font-size: var(--doc-font-size, 11pt);
+  line-height: normal;
+}
+
+/* Notes live in the gutter beside the sheet, never on the paper. */
+.notes {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(100% + 12px);
+  width: 140px;
+  pointer-events: none;
+}
+
+/* No gutter to spare beside a full-width sheet; the footer still says it. */
+@container editor (max-width: 1059px) {
+  .notes {
+    display: none;
+  }
+}
+
+.bracket {
+  position: absolute;
+  left: 0;
+  width: 2px;
+  border-radius: 1px;
+  background-color: var(--note-subtle);
+}
+
+.bracket.over {
+  background-color: var(--note-danger);
+}
+
+.note {
+  position: absolute;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transform: translateY(-50%);
+  font-size: 12.5px;
+  line-height: 16px;
+  white-space: nowrap;
+  color: var(--note);
+}
+
+.note.strong {
+  font-weight: 600;
+  color: var(--note-strong);
+}
+
+.tick {
+  width: 10px;
+  border-top: 1px dashed var(--note-danger);
+}
+
+@media (prefers-color-scheme: dark) {
+  .editor {
+    --paper-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 12px 32px rgba(0, 0, 0, 0.45);
+    --note: rgba(255, 255, 255, 0.6);
+    --note-strong: rgba(255, 255, 255, 0.9);
+    --note-subtle: rgba(255, 255, 255, 0.25);
+    --note-danger: #ff6b6b;
+  }
+}
+
+/* Imported paragraphs set their own spacing; these are defaults for new text. */
+.content :global(.tiptap) p,
+.content :global(.tiptap) h1,
+.content :global(.tiptap) h2,
+.content :global(.tiptap) h3 {
+  margin: 0 0 6pt;
+}
+
+.content :global(.tiptap) ul,
+.content :global(.tiptap) ol {
+  margin: 0;
+  padding-left: 0.5in;
+}
+
+.content :global(.tiptap) hr {
+  border: none;
+  border-top: 1px solid #a0a0a0;
+  margin: 2pt 0;
+}
+
+.content :global(.tiptap .right-tab) {
+  float: right;
+}
+
+/* Sits in the page's left padding, beside the block it moves. On white
+   paper in both themes, so it keeps its light-theme colours. */
+.dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 22px;
+  border-radius: 4px;
+  color: rgba(0, 0, 0, 0.35);
+  font-size: 14px;
+  cursor: grab;
+}
+
+.dragHandle.listItem {
+  transform: translateX(-18px);
+}
+
+.dragHandle:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+
+.content :global(.tiptap .ProseMirror-selectednode) {
+  border-radius: 5px;
+  background-color: rgba(57, 108, 216, 0.1);
+  box-shadow: 0 0 0 3px rgba(57, 108, 216, 0.1);
+  transition: background-color 200ms ease, box-shadow 200ms ease;
+}

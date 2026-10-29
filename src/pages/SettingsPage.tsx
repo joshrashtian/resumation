@@ -1,4 +1,4 @@
-import { Settings, useSettings } from "../settings";
+import { Settings, useSettings } from "../lib/settings";
 
 const PAGE_LIMITS: { value: Settings["pageLimit"]; label: string }[] = [
   { value: 0, label: "No limit" },

@@ -31,6 +31,13 @@ html {
   scrollbar-width: none;
 }
 
+/* No elastic bounce past the page edges: in a transparent window it drags
+   the content away and exposes the empty window behind it. */
+html,
+body {
+  overscroll-behavior: none;
+}
+
 html::-webkit-scrollbar {
   display: none;
 }

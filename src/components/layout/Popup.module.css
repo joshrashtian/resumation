@@ -1,0 +1,100 @@
+.backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    border-radius: 26px;
+    background-color: rgba(0, 0, 0, 0.25);
+    animation: fade 0.12s ease-out;
+}
+
+.popup {
+    width: 100%;
+    max-width: 340px;
+    padding: 16px;
+    border: 1px solid rgba(0, 0, 0, 0.4);
+    border-radius: 16px;
+    background-color: rgba(246, 246, 246, 0.85);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+    text-align: left;
+    animation: pop 0.12s ease-out;
+}
+
+@keyframes fade {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes pop {
+    from {
+        opacity: 0;
+        transform: scale(0.96);
+    }
+}
+
+.popup h2 {
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 20px;
+}
+
+.popup p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 18px;
+    opacity: 0.75;
+    overflow-wrap: anywhere;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.confirm {
+    border-color: transparent;
+    background-color: #d93a3a;
+    color: white;
+}
+
+.confirm:where(:hover) {
+    background-color: #c53030;
+}
+
+.confirm:where(:active) {
+    background-color: #b02a2a;
+}
+
+:root[data-transparency="off"] .popup {
+    background-color: var(--solid-surface);
+}
+
+@media (prefers-color-scheme: dark) {
+    .backdrop {
+        background-color: rgba(0, 0, 0, 0.45);
+    }
+
+    .popup {
+        border-color: rgba(255, 255, 255, 0.1);
+        background-color: rgba(40, 40, 42, 0.85);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .confirm {
+        border-color: transparent;
+        background-color: #d93a3a;
+    }
+
+    .confirm:where(:hover) {
+        background-color: #e04848;
+    }
+}

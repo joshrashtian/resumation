@@ -1,0 +1,294 @@
+:root {
+  --tb-bg: #f6f6f7;
+  --tb-control: #ffffff;
+  --tb-border: rgba(0, 0, 0, 0.12);
+  --tb-hover: rgba(0, 0, 200, 0.05);
+  --tb-active-bg: rgba(57, 108, 216, 0.14);
+  --tb-active-fg: #2a56b8;
+  --tb-accent-bg: rgba(57, 108, 216, 0.1);
+  --tb-accent-border: rgba(57, 108, 216, 0.35);
+  --tb-accent-fg: #2a56b8;
+  --tb-muted: rgba(0, 0, 0, 0.5);
+  --tb-popover: #ffffff;
+  --tb-glass: rgba(246, 246, 246, 0.45);
+  --tb-glass-border: rgba(0, 0, 0, 0.12);
+  --tb-glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.toolbar {
+
+
+  display: flex;
+  position: sticky;
+  top: 64px;
+  z-index: 50;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+ 
+
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  animation: round linear both;
+  animation-timeline: scroll(root block);
+  animation-range: 0 300px;
+}
+
+
+@keyframes round {
+  from {
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+    border-bottom: 1px solid var(--tb-border);
+    scale: 1;
+    background-color: var(--tb-bg);
+    -webkit-backdrop-filter: blur(0px) saturate(100%);
+    backdrop-filter: blur(0px) saturate(100%);
+    box-shadow: 0 0 0 transparent;
+  }
+
+  to {
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+    border-bottom: 1px solid var(--tb-glass-border);
+    background-color: var(--tb-glass);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    backdrop-filter: blur(20px) saturate(160%);
+    box-shadow: var(--tb-glass-shadow);
+    scale: 1.03;
+  }
+}
+
+.toolbar button {
+  height: 36px;
+  min-width: 36px;
+  padding: 0 10px;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background-color: transparent;
+  box-shadow: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: inherit;
+  white-space: nowrap;
+}
+
+.toolbar button:hover {
+  background-color: var(--tb-hover);
+
+}
+
+.toolbar button svg {
+  font-size: 17px;
+  flex: none;
+}
+
+.toolbar button.active {
+  background-color: var(--tb-active-bg);
+  color: var(--tb-active-fg);
+}
+
+.toolbar button.select {
+  padding: 0 10px 0 14px;
+  background-color: var(--tb-control);
+  border-color: var(--tb-border);
+}
+
+.toolbar button.select.open,
+.toolbar button.select:hover {
+  border-color: var(--tb-accent-border);
+}
+
+.chevron {
+  font-size: 14px !important;
+  color: var(--tb-muted);
+}
+
+.divider {
+  width: 1px;
+  height: 22px;
+  margin: 0 6px;
+  border-right: 0px;
+  border-top: 0px;
+  border-bottom: 0px;
+  border-left: 2px;
+  border-color: var(--tb-border);
+  border-style: dotted;
+}
+
+.toolbar button.insert {
+  padding: 0 8px 0 14px;
+  background-color: var(--tb-accent-bg);
+  border-color: var(--tb-accent-border);
+  color: var(--tb-accent-fg);
+}
+
+.toolbar button.insert:hover {
+  background-color: var(--tb-active-bg);
+}
+
+.insert kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 22px;
+  margin-left: 4px;
+  border: 1px solid var(--tb-accent-border);
+  border-radius: 2px;
+  font-family: inherit;
+  font-size: 12px;
+}
+
+/* Popovers */
+
+.popoverWrap {
+  position: relative;
+}
+
+.popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 60;
+  min-width: 180px;
+  padding: 6px;
+  border: 1px solid var(--tb-border);
+  border-radius: 10px;
+  background-color: var(--tb-popover);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.toolbar .menuItem {
+  justify-content: space-between;
+  width: 100%;
+  height: 32px;
+  font-weight: 400;
+  text-align: left;
+}
+
+.menuItem svg {
+  color: var(--tb-active-fg);
+}
+
+.fontPanel {
+  display: flex;
+  gap: 6px;
+}
+
+.fontList {
+  width: 200px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.sizeGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 48px);
+  align-content: start;
+  gap: 2px;
+  padding-left: 6px;
+  border-left: 1px solid var(--tb-border);
+}
+
+.toolbar .sizeGrid button {
+  height: 30px;
+  min-width: 0;
+  padding: 0;
+  font-weight: 400;
+}
+
+.alignPanel {
+  width: 180px;
+}
+
+.alignRow {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 6px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--tb-border);
+}
+
+.panelLabel {
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--tb-muted);
+}
+
+.linkForm {
+  display: flex;
+  gap: 6px;
+  width: 280px;
+}
+
+.linkForm input {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--tb-border);
+  border-radius: 8px;
+  background-color: var(--tb-control);
+  font-family: inherit;
+  font-size: 14px;
+  color: inherit;
+}
+
+.toolbar .linkForm button {
+  height: 32px;
+  background-color: var(--tb-accent-bg);
+  border-color: var(--tb-accent-border);
+  color: var(--tb-accent-fg);
+}
+
+/* Transparency off: the scrolled toolbar goes solid instead of glass. */
+:global(:root[data-transparency="off"]) .toolbar {
+  --tb-glass: var(--solid-panel);
+}
+
+@media (prefers-color-scheme: dark) {
+  .toolbar {
+    --tb-bg: #1b1b1c;
+    --tb-control: #202022;
+    --tb-border: rgba(255, 255, 255, 0.1);
+    --tb-hover: rgba(255, 255, 255, 0.06);
+    --tb-active-bg: rgba(91, 132, 230, 0.22);
+    --tb-active-fg: #c9d6f7;
+    --tb-accent-bg: rgba(91, 132, 230, 0.14);
+    --tb-accent-border: rgba(120, 150, 230, 0.35);
+    --tb-accent-fg: #d6e0fa;
+    --tb-muted: rgba(255, 255, 255, 0.5);
+    --tb-popover: #232325;
+    --tb-glass: rgba(40, 40, 42, 0.5);
+    --tb-glass-border: rgba(255, 255, 255, 0.1);
+    --tb-glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    color-scheme: dark;
+  }
+
+  /* Beat the solid button and input fill from global.css. */
+  :global(:root[data-transparency="off"]) .toolbar button,
+  :global(:root[data-transparency="off"]) .toolbar button:hover {
+    background-color: transparent;
+  }
+
+  :global(:root[data-transparency="off"]) .toolbar button:hover:not(.select, .insert) {
+    background-color: var(--tb-hover);
+  }
+
+  :global(:root[data-transparency="off"]) .toolbar button.active {
+    background-color: var(--tb-active-bg);
+  }
+
+  :global(:root[data-transparency="off"]) .toolbar button.select,
+  :global(:root[data-transparency="off"]) .linkForm input {
+    background-color: var(--tb-control);
+  }
+
+  :global(:root[data-transparency="off"]) .toolbar button.insert,
+  :global(:root[data-transparency="off"]) .linkForm button {
+    background-color: var(--tb-accent-bg);
+  }
+}

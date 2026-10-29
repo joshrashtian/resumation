@@ -12,10 +12,9 @@ import {
   LuItalic,
   LuLink,
   LuList,
-  LuPlus,
   LuUnderline,
 } from "react-icons/lu";
-import { FONTS } from "../fontOptions";
+import { FONTS } from "../../lib/fontOptions";
 import styles from "./EditorToolbar.module.css";
 
 // Resume sizes are usually given in points (body text 10–12pt).
@@ -144,10 +143,9 @@ type EditorToolbarProps = {
   // The document's base font, shown when the text has no font of its own.
   defaultFont?: string;
   defaultSize?: string;
-  onInsertBlock?: () => void;
 };
 
-function EditorToolbar({ editor, defaultFont, defaultSize, onInsertBlock }: EditorToolbarProps) {
+function EditorToolbar({ editor, defaultFont, defaultSize }: EditorToolbarProps) {
   const state = useEditorState({
     editor,
     selector: ({ editor }) => ({
@@ -315,17 +313,6 @@ function EditorToolbar({ editor, defaultFont, defaultSize, onInsertBlock }: Edit
           </div>
         )}
       </Popover>
-
-      {onInsertBlock && (
-        <>
-          <span className={styles.divider} />
-          <button className={styles.insert} title="Insert a Text Block (type / on an empty line)" onClick={onInsertBlock}>
-            <LuPlus />
-            Insert block
-            <kbd>/</kbd>
-          </button>
-        </>
-      )}
     </div>
   );
 }
