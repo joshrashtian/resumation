@@ -29,7 +29,7 @@
     opacity: 0.6;
 }
 
-.copy {
+.action {
     gap: 6px;
     padding: 3px 10px;
     border: 1px solid #d0d0d0;
@@ -63,7 +63,7 @@
         border-color: rgba(255, 255, 255, 0.1);
     }
 
-    :global(:root) .copy {
+    :global(:root) .action {
         background: transparent;
         border-color: rgba(255, 255, 255, 0.15);
     }

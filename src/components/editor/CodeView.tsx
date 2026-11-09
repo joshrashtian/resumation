@@ -1,13 +1,23 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import MonacoEditor, { BeforeMount } from "@monaco-editor/react";
+import { KeyCode, type editor, type IDisposable } from "monaco-editor";
 import { FaCheck, FaCopy } from "react-icons/fa6";
+import { LuWandSparkles } from "react-icons/lu";
 import "../../lib/monaco";
 import styles from "./CodeView.module.css";
 
 type CodeViewProps = {
   language: "html" | "json";
+  // What the editor shows; a new value replaces the text, which stays undoable.
   code: string;
   description?: string;
+  // Makes the code editable, reporting every change.
+  onChange?: (code: string) => void;
+  // Keeps an editable view read-only for now, e.g. while previewing an old version.
+  readOnly?: boolean;
+  onBlur?: () => void;
+  // Adds language features once the editor is up; they're disposed with it.
+  setup?: (editor: editor.IStandaloneCodeEditor) => IDisposable;
 };
 
 const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -78,18 +88,42 @@ const defineThemes: BeforeMount = (monaco) => {
   });
 };
 
-// Read-only Monaco view of the current document's source.
-const CodeView = ({ language, code, description }: CodeViewProps) => {
+// Monaco view of the current document's source, editable when given onChange.
+const CodeView = ({ language, code, description, onChange, readOnly = false, onBlur, setup }: CodeViewProps) => {
   const [copied, setCopied] = useState(false);
   const dark = usePrefersDark();
+  const editable = !!onChange && !readOnly;
 
-  const lineCount = code.split("\n").length;
-  const size = new Blob([code]).size;
+  // The text as it stands, edits included, for the line count and Copy.
+  const [text, setText] = useState(code);
+  useEffect(() => setText(code), [code]);
+
+  const onBlurRef = useRef(onBlur);
+  onBlurRef.current = onBlur;
+  const features = useRef<IDisposable[]>([]);
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const editableRef = useRef(editable);
+  editableRef.current = editable;
+
+  // Runs the language's formatter, if it has one; Monaco drops the result if the text changes meanwhile.
+  function format() {
+    if (editableRef.current) void editorRef.current?.getAction("editor.action.formatDocument")?.run();
+  }
+  useEffect(
+    () => () => {
+      features.current.forEach((feature) => feature.dispose());
+      features.current = [];
+    },
+    [],
+  );
+
+  const lineCount = text.split("\n").length;
+  const size = new Blob([text]).size;
   const sizeLabel = size < 1024 ? `${size} B` : `${(size / 1024).toFixed(1)} KB`;
 
   async function copy() {
     try {
-      await navigator.clipboard.writeText(code);
+      await navigator.clipboard.writeText(text);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1500);
     } catch (err) {
@@ -105,7 +139,13 @@ const CodeView = ({ language, code, description }: CodeViewProps) => {
           {lineCount} line{lineCount === 1 ? "" : "s"} · {sizeLabel}
           {description && ` · ${description}`}
         </span>
-        <button className={styles.copy} title="Copy to clipboard" onClick={copy}>
+        {editable && (
+          <button className={styles.action} title="Format (⇧⌥F). Also runs when you save or paste." onClick={format}>
+            <LuWandSparkles />
+            <span>Format</span>
+          </button>
+        )}
+        <button className={styles.action} title="Copy to clipboard" onClick={copy}>
           {copied ? <FaCheck /> : <FaCopy />}
           <span>{copied ? "Copied" : "Copy"}</span>
         </button>
@@ -116,9 +156,31 @@ const CodeView = ({ language, code, description }: CodeViewProps) => {
           value={code}
           theme={dark ? "resumation-dark" : "resumation-light"}
           beforeMount={defineThemes}
+          onMount={(editor) => {
+            editorRef.current = editor;
+            features.current.push(
+              editor.onDidBlurEditorText(() => onBlurRef.current?.()),
+              // Formats as it saves: ⌘S still reaches the app, which saves the document.
+              editor.onKeyDown((e) => {
+                if (e.keyCode === KeyCode.KeyS && (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey) format();
+              }),
+              editor.onDidPaste(format),
+            );
+            if (setup) features.current.push(setup(editor));
+          }}
+          onChange={(value = "") => {
+            setText(value);
+            onChange?.(value);
+          }}
           options={{
-            readOnly: true,
-            domReadOnly: true,
+            readOnly: !editable,
+            domReadOnly: !editable,
+            readOnlyMessage: { value: onChange ? "Read-only while previewing an old version" : "Read-only" },
+            tabSize: 2,
+            // Suggestions come from the language (tags, attributes, snippets), not from words already typed.
+            wordBasedSuggestions: "off",
+            // Resumes are full of en dashes and curly quotes; they shouldn't be boxed as look-alikes.
+            unicodeHighlight: { ambiguousCharacters: false },
             fontFamily: 'ui-monospace, "SF Mono", Menlo, Consolas, monospace',
             fontSize: 12.5,
             lineHeight: 20,
@@ -133,10 +195,10 @@ const CodeView = ({ language, code, description }: CodeViewProps) => {
             guides: { indentation: true, highlightActiveIndentation: true },
             lineNumbersMinChars: 3,
             glyphMargin: false,
-            renderLineHighlight: "none",
+            renderLineHighlight: editable ? "line" : "none",
             occurrencesHighlight: "off",
             selectionHighlight: false,
-            matchBrackets: "never",
+            matchBrackets: editable ? "near" : "never",
             cursorStyle: "line-thin",
             hideCursorInOverviewRuler: true,
             overviewRulerLanes: 0,

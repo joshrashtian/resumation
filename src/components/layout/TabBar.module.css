@@ -1,11 +1,11 @@
 .tabBar {
   display: flex;
-  gap: 2px;
-  width: 100%;
+  gap: 5px;
+  width: 90%;
   height:32px;
   margin: 12px auto 0;
   padding: 3px;
-  border-radius: 12px;
+  border-radius: 16px;
   background-color: rgba(240, 240, 240, 0.6);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
@@ -15,11 +15,12 @@
   gap: 6px;
   padding: 4px 12px;
   border: none;
-  border-radius: 9px;
+  border-radius: 16px;
   background: transparent;
   box-shadow: none;
   font-size: 0.8125em;
-  font-family: inherit;
+  font-family: "DM Mono";
+
   color: rgba(0, 0, 0, 0.6);
   animation: 3s ease-in
 }

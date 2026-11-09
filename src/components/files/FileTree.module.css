@@ -1,51 +1,151 @@
+/* The open item takes the teal of the active Document tab; everything else stays neutral. */
 .tree {
+    --tree-accent: #087e8b;
+    --tree-accent-strong: #066772;
+    --tree-accent-tint: rgba(8, 126, 139, 0.1);
+    --tree-muted: rgba(0, 0, 0, 0.55);
+    --tree-subtle: rgba(0, 0, 0, 0.35);
+    --tree-hover: rgba(0, 0, 0, 0.05);
+    --tree-warning: #b25e00;
+}
+
+.list {
     list-style: none;
     margin: 0;
     padding: 0;
 }
 
-.tree li button {
+.list.nested {
+    padding-left: 14px;
+}
+
+/* Section headers: a caption with a count, click to collapse. */
+.section {
+    display: flex;
+    align-items: center;
+    gap: 4px;
     width: 100%;
-    justify-content: flex-start;
-    gap: 6px;
-    padding: 5px 8px;
+    margin-top: 10px;
+    padding: 4px 8px;
     border: none;
-    box-shadow: none;
-    border-radius: none;
+    border-radius: 6px;
     background: transparent;
-    color: inherit;
+    box-shadow: none;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    color: var(--tree-muted);
+}
+
+.tree section:first-child .section {
+    margin-top: 0;
+}
+
+.count {
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+}
+
+.row {
+    justify-content: flex-start;
+    gap: 8px;
+    width: 100%;
+    height: 28px;
+    padding: 0 8px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    box-shadow: none;
     font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: inherit;
     text-align: left;
     white-space: nowrap;
 }
 
-.tree li button svg {
+.row:hover,
+.section:hover {
+    background-color: var(--tree-hover);
+}
+
+.row:focus-visible,
+.section:focus-visible {
+    outline: 2px solid var(--tree-accent);
+    outline-offset: -2px;
+}
+
+.icon {
     flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    color: var(--tree-muted);
 }
 
-.resumation {
-    color: #396cd8;
-}
-
-.tree li button span:not(.chevron) {
+.name {
     overflow: hidden;
     text-overflow: ellipsis;
-
 }
 
-.chevron {
+.meta {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--tree-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.twist {
     flex-shrink: 0;
     width: 10px;
-    font-size: 0.7em;
-    opacity: 0.6;
+    height: 10px;
+    color: var(--tree-subtle);
+    transition: transform 0.15s ease;
 }
 
-.tree.nested {
-    padding-left: 14px;
+.twist.open {
+    transform: rotate(90deg);
 }
 
-.tree li button:hover {
-    background-color: rgba(0, 0, 240, 0.06);
+.twist.none {
+    visibility: hidden;
+}
+
+.row.variant {
+    padding-left: 26px;
+    font-weight: 400;
+}
+
+/* The one open document or variant. */
+.row.on,
+.row.on:hover {
+    background-color: var(--tree-accent-tint);
+    color: var(--tree-accent-strong);
+}
+
+.row.on .icon {
+    color: var(--tree-accent);
+}
+
+/* A collapsed resume still shows that its variant is the open one. */
+.row.holdsOpen .name {
+    font-weight: 600;
+}
+
+.row.draft {
+    cursor: default;
+}
+
+.row.draft .name {
+    font-style: italic;
+}
+
+.dirty {
+    flex-shrink: 0;
+    width: 7px;
+    height: 7px;
+    margin-left: auto;
+    border-radius: 50%;
+    background-color: var(--tree-warning);
 }
 
 .empty {
@@ -53,21 +153,24 @@
     opacity: 0.6;
 }
 
-.tree.nested .empty {
-    padding: 2px 8px 2px 22px;
+.empty.nested {
+    padding: 2px 8px 2px 32px;
+    font-size: 13px;
 }
 
 @media (prefers-color-scheme: dark) {
-    .tree li button:hover {
-        background-color: rgba(100, 200, 255, 0.08);
+    .tree {
+        --tree-accent: #3fb8c4;
+        --tree-accent-strong: #5cc9d3;
+        --tree-accent-tint: rgba(63, 184, 196, 0.16);
+        --tree-muted: rgba(255, 255, 255, 0.6);
+        --tree-subtle: rgba(255, 255, 255, 0.35);
+        --tree-hover: rgba(255, 255, 255, 0.08);
+        --tree-warning: #f0a447;
     }
+}
 
-  
-    :global(:root[data-transparency="off"]) .tree li button {
-        background-color: transparent;
-    }
-
-    :global(:root[data-transparency="off"]) .tree li button:hover {
-        background-color: rgba(100, 100, 255, 0.08);
-    }
+:global(:root[data-transparency="off"]) .row:not(.on):not(:hover),
+:global(:root[data-transparency="off"]) .section:not(:hover) {
+    background-color: transparent;
 }

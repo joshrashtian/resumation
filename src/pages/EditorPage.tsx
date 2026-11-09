@@ -6,7 +6,8 @@ import Editor, { PageStatus } from "../components/editor/Editor";
 import { docxToHtml } from "../lib/converter";
 import { useSettings } from "../lib/settings";
 import { DEFAULT_LAYOUT, PageLayout } from "../lib/pageLayout";
-import { formatHtml } from "../lib/codeFormat";
+import { attachResumeHtml } from "../lib/resumeHtml";
+import { useHtmlSource } from "../components/editor/useHtmlSource";
 import { displayName, isResumationFile, RESUMATION_EXTENSION, ResumationFile } from "../lib/fileTypes";
 import {
   Block,
@@ -27,19 +28,22 @@ import TabBar, { TabItem } from "../components/layout/TabBar";
 import CodeView from "../components/editor/CodeView";
 import NewFileInput from "../components/files/NewFileInput";
 import VersionHistory, { EMPTY_HISTORY, History, Version } from "../components/files/VersionHistory";
-import { LuBraces, LuCode, LuFileText, LuPlus } from "react-icons/lu";
+import { LuBraces, LuCode, LuFileText, LuPlus, LuWholeWord } from "react-icons/lu";
 
 const SIDEBAR_WIDTH = 240;
 
 // Text Blocks save themselves constantly, so they keep at most one automatic version per file this often.
 const AUTO_VERSION_INTERVAL = 5 * 60 * 1000;
 
-type View = "document" | "html" | "json";
+type View = "document" | "html" 
+//| "json" 
+| "keywords";
 
 const VIEWS: TabItem<View>[] = [
   { id: "document", label: "Document", icon: <LuFileText />, shortcut: "⌘1" },
   { id: "html", label: "Code", icon: <LuCode />, shortcut: "⌘2" },
-  { id: "json", label: "JSON", icon: <LuBraces />, shortcut: "⌘3" },
+  //{ id: "json", label: "JSON", icon: <LuBraces />, shortcut: "⌘3" }, 
+{ id: "keywords", label: "Keywords", icon: <LuWholeWord />, shortcut: "⌘3"}
 ];
 
 type Snapshot = { html: string; json: JSONContent };
@@ -53,6 +57,8 @@ type Doc = {
   folder?: string;
   // The Resumation Editor File this document saves to, once it has one.
   savePath?: string;
+  // The project file it was opened from when that isn't savePath, e.g. a Word file.
+  openedFrom?: string;
 };
 
 type OpenBlocks = { path: string; name: string; blocks: Block[] };
@@ -122,24 +128,16 @@ function EditorPage({ project }: EditorPageProps) {
     if (viewRef.current !== "document") setSnapshot(latest.current);
   }
 
+  // The Code tab edits the document as HTML.
+  const htmlSource = useHtmlSource(tiptap, view === "html");
+
   function selectView(next: View) {
+    // Code typed just before leaving the tab goes in first.
+    htmlSource.flush();
     if (next !== "document") setSnapshot(latest.current);
     setView(next);
   }
 
-  const [formattedHtml, setFormattedHtml] = useState("");
-  useEffect(() => {
-    let cancelled = false;
-    formatHtml(snapshot.html)
-      .catch((err) => {
-        console.error(err);
-        return snapshot.html;
-      })
-      .then((html) => !cancelled && setFormattedHtml(html));
-    return () => {
-      cancelled = true;
-    };
-  }, [snapshot.html]);
   const resumeJson = useMemo(
     () => JSON.stringify({ name: doc.name ?? null, layout: doc.layout ?? DEFAULT_LAYOUT, content: snapshot.json }, null, 2),
     [snapshot.json, doc.name, doc.layout],
@@ -252,7 +250,7 @@ function EditorPage({ project }: EditorPageProps) {
       const path = await invoke<string>("create_document", { project, name: file.name, bytes });
       setFilesVersion((v) => v + 1);
       setBlocksDoc(null);
-      setDoc((prev) => ({ key: prev.key + 1, content: converted.html, layout: converted.layout, name: path.split("/").pop() }));
+      setDoc((prev) => ({ key: prev.key + 1, content: converted.html, layout: converted.layout, name: path.split("/").pop(), openedFrom: path }));
     } catch (err) {
       console.error(err);
       alert(`Couldn't add ${file.name} to ${project}.`);
@@ -268,6 +266,7 @@ function EditorPage({ project }: EditorPageProps) {
       await flushBlocks();
       return saveVersion(blocksDoc.path, message);
     }
+    htmlSource.flush();
     const saved: ResumationFile = {
       name: doc.name ?? null,
       layout: doc.layout ?? DEFAULT_LAYOUT,
@@ -310,7 +309,7 @@ function EditorPage({ project }: EditorPageProps) {
         const bytes = await invoke<ArrayBuffer>("read_document_bytes", { project, name: path });
         const { html, layout } = await docxToHtml(new File([bytes], name));
         setBlocksDoc(null);
-        setDoc((prev) => ({ key: prev.key + 1, content: html, layout, name, folder: folderOf(path) }));
+        setDoc((prev) => ({ key: prev.key + 1, content: html, layout, name, folder: folderOf(path), openedFrom: path }));
       } else if (isResumationFile(name)) {
         const saved: ResumationFile = JSON.parse(await invoke<string>("read_document", { project, name: path }));
         setBlocksDoc(null);
@@ -319,7 +318,7 @@ function EditorPage({ project }: EditorPageProps) {
       } else if (ext === "html" || ext === "htm" || ext === "txt") {
         const html = await invoke<string>("read_document", { project, name: path });
         setBlocksDoc(null);
-        setDoc((prev) => ({ key: prev.key + 1, content: html, name, folder: folderOf(path) }));
+        setDoc((prev) => ({ key: prev.key + 1, content: html, name, folder: folderOf(path), openedFrom: path }));
       } else {
         alert(`Resumation can't open ${name}. It opens Word, Resumation Editor, Text Blocks and HTML files.`);
       }
@@ -420,6 +419,24 @@ function EditorPage({ project }: EditorPageProps) {
     await openDocument(versionPath);
   }
 
+  // From the file tree: the open file switches as above; another file
+  // switches on disk first, then opens holding that variant.
+  async function openVariant(path: string, variant: string) {
+    if (path === versionPath) return switchVariant(variant);
+    try {
+      await invoke("switch_document_variant", { project, name: path, variant });
+      setFilesVersion((v) => v + 1);
+    } catch (err) {
+      console.error(err);
+      alert(`Couldn't switch to ${variant}.`);
+      return;
+    }
+    await openDocument(path);
+  }
+
+  // What the file tree marks as open; a new document has no file until it's saved.
+  const openPath = blocksDoc?.path ?? doc.savePath ?? doc.openedFrom ?? null;
+
   const sidebarSpace = (open: boolean) => (open ? `${SIDEBAR_WIDTH + 24}px` : "0px");
 
   return (
@@ -459,7 +476,18 @@ function EditorPage({ project }: EditorPageProps) {
         {creatingFile && (
           <NewFileInput placeholder="Text Blocks name" onSubmit={createBlocksFile} onCancel={() => setCreatingFile(false)} />
         )}
-        {leftOpen && <FileTree project={project} refreshKey={filesVersion} onOpenFile={openDocument} onDeleted={handleDeleted} />}
+        {leftOpen && (
+          <FileTree
+            project={project}
+            refreshKey={filesVersion}
+            versionsKey={versionsVersion}
+            openPath={openPath}
+            draft={!openPath}
+            onOpenFile={openDocument}
+            onOpenVariant={openVariant}
+            onDeleted={handleDeleted}
+          />
+        )}
       </Sidebar>
 
       <Sidebar side="right" open={rightOpen} title="Details">
@@ -528,8 +556,18 @@ function EditorPage({ project }: EditorPageProps) {
               onInsertBlock={showBlocksPicker}
             />
           </div>
-          {view === "html" && <CodeView language="html" code={formattedHtml} description="editor.getHTML()" />}
-          {view === "json" && <CodeView language="json" code={resumeJson} description="name, layout, editor.getJSON()" />}
+          {view === "html" && tiptap && htmlSource.source !== null && (
+            <CodeView
+              language="html"
+              code={htmlSource.source}
+              description={preview ? "read-only while previewing" : "edits go into the document"}
+              onChange={htmlSource.change}
+              readOnly={!!preview}
+              onBlur={htmlSource.flush}
+              setup={(code) => attachResumeHtml(code, tiptap.schema)}
+            />
+          )}
+          {view === "keywords" && <div></div>}
         </div>
       </main>
       {!blocksDoc && <EditorFooter pageLimit={settings.pageLimit} status={pageStatus} />}

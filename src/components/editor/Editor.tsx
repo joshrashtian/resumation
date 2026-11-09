@@ -153,6 +153,9 @@ function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT
 
     const measure = () => {
       const dom = editor.view.dom;
+      // Hidden behind another tab (e.g. while the Code tab edits it), the page
+      // measures as empty, so it keeps its last measurements until it shows again.
+      if (dom.isConnected && !dom.getClientRects().length) return;
       const height = dom.isConnected ? contentHeight(dom) : 0;
       setUsedHeight(height);
       // Paragraph spacing counts too, so divide the content height by the
@@ -170,7 +173,11 @@ function Editor({ content = "", onChange, pageLimit = 0, layout = DEFAULT_LAYOUT
     measure();
     document.fonts.ready.then(measure);
     editor.on("update", measure);
+    // Also catches the page showing again after being hidden.
+    const resize = new ResizeObserver(measure);
+    resize.observe(editor.view.dom);
     return () => {
+      resize.disconnect();
       editor.off("update", measure);
       window.clearTimeout(hideTimer);
       storage.maxHeight = null;
